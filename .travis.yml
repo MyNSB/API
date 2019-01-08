@@ -29,4 +29,4 @@ before_script:
     - go get github.com/tidwall/gjson
 
 script: 
-    go test ./Tests
+    go test ./tests

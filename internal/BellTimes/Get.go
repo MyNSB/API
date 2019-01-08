@@ -1,13 +1,14 @@
-package BellTimes
+package belltimes
 
 import (
-	"Util"
+	"mynsb-api/internal/util"
 	json2 "encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 	"errors"
+	"mynsb-api/internal/sessions"
 )
 
 
@@ -18,22 +19,22 @@ import (
  */
 func ServeBellTimes(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if the currently logged in user is allowed here
-	allowed, _ := Util.UserIsAllowed(r, w, "student")
+	// Determine if the currently logged in student is allowed here
+	allowed, _ := sessions.UserIsAllowed(r, w, "student")
 	if !allowed {
-		QuickErrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
 	params, err := getParams(r)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "Assembly is not boolean")
+		quickerrors.MalformedRequest(w, "Assembly is not boolean")
 		return
 	}
 
 
 	// Return the error
-	Util.Error(200, "OK", getTimes(params["term"].(string), params["day"].(string), params["assembly"].(bool)), "Response", w)
+	util.Error(200, "OK", getTimes(params["term"].(string), params["day"].(string), params["assembly"].(bool)), "Response", w)
 }
 
 
@@ -96,7 +97,7 @@ func getParams(r *http.Request) (map[string]interface{}, error){
 	assemblyBool := false
 
 	// Convert to bool
-	if Util.Isset(assembly) {
+	if util.Isset(assembly) {
 		var err error
 		assemblyBool, err = strconv.ParseBool(assembly)
 		if err != nil {

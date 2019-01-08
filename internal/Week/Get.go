@@ -1,11 +1,11 @@
-package Week
+package week
 
 import (
 	"net/http"
 	"github.com/julienschmidt/httprouter"
 	"io/ioutil"
 	"time"
-	"Util"
+	"mynsb-api/internal/util"
 	"github.com/metakeule/fmtdate"
 	"github.com/tidwall/gjson"
 	"github.com/Azure/go-ntlmssp"
@@ -33,7 +33,7 @@ func GetWeek(w http.ResponseWriter, r* http.Request, _ httprouter.Params) {
 	}
 
 	// Return our result
-	Util.SolidError(200, "OK", startWeekType, "Week", w)
+	util.SolidError(200, "OK", startWeekType, "week", w)
 }
 
 
@@ -87,7 +87,7 @@ func getTermDates() (string, error) {
 		},
 	}
 
-	req, _ := http.NewRequest("GET", "https://web3.northsydbo-h.schools.nsw.edu.au/classery/public/api/export/calendar", nil)
+	req, _ := http.NewRequest("GET", "https://web3.northsydbo-h.schools.nsw.edu.au/classery/public/mynsb-api/export/calendar", nil)
 	// Set up the basic auth headers
 	req.SetBasicAuth("skedular", "chickenfarm")
 	req.Header.Set("X-AUTH", "!te5D?DI<c0#t=2nZir0_eC4.(`i1>p/xEj[Qk_v10dF|G~*{zvwcwTw+`MS&o)M")

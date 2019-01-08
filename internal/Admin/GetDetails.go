@@ -1,13 +1,14 @@
-package Admin
+package admin
 
 import (
-	"User"
 	"net/http"
 	"github.com/julienschmidt/httprouter"
-	"Util"
-	"QuickErrors"
+	"mynsb-api/internal/util"
+	"mynsb-api/internal/quickerrors"
 	json2 "encoding/json"
-	"DB"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/student"
 )
 
 type details struct {
@@ -16,25 +17,25 @@ type details struct {
 }
 
 
-// Retrieves the details for an incoming user
+// Retrieves the details for an incoming student
 /*
 	http handlers need minimal documentation
  */
 func GetDetailsHandler (w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if the user is allowed here
-	allowed, user := Util.UserIsAllowed(r, w, "admin")
+	// Determine if the student is allowed here
+	allowed, user := sessions.UserIsAllowed(r, w, "admin")
 	if !allowed {
-		QuickErrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
 	// Connect to Database
-	Util.Conn("sensitive", "database", "student")
-	defer DB.DB.Close()
+	db.Conn("student")
+	defer db.DB.Close()
 
 	// Get the details
-	Util.Error(200, "OK", getDetails(user), "Response", w)
+	util.Error(200, "OK", getDetails(user), "Response", w)
 	return
 }
 
@@ -45,15 +46,15 @@ func GetDetailsHandler (w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	@ UTIL FUNCTIONS ==================================================
  */
  /*
- 	getDetails takes a user and returns the details for that user
+ 	getDetails takes a student and returns the details for that student
  	@params;
- 		user User.User
+ 		student student.student
   */
-func getDetails(user User.User) string {
-	rows, _ := DB.DB.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
+func getDetails(user student.User) string {
+	rows, _ := db.DB.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
 	defer rows.Close()
 
-	// Details structure
+	// userdetails structure
 	details := details{}
 
 	// Scan into the rows

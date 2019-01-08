@@ -1,20 +1,20 @@
-package Reminders
+package reminders
 
 import (
 	"time"
-	"User"
+	"mynsb-api/internal/student"
 	"database/sql"
 	"encoding/json"
 	"net/http"
 	"github.com/julienschmidt/httprouter"
-	"Sessions"
-	"Util"
-	"DB"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/util"
+	"mynsb-api/internal/db"
 	"github.com/metakeule/fmtdate"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 )
 
-func getReminders(db *sql.DB, start time.Time, end time.Time, user User.User) []Reminders.Reminder {
+func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User) []Reminder {
 	res, err := db.Query("SELECT * FROM reminders WHERE reminder_date_time BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP AND student_id = $3 ORDER BY reminder_date_time ASC",
 		start, end, user.Name)
 
@@ -59,43 +59,43 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user User.User) []
 func GetRemindersHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 
-	user, err := Sessions.ParseSessions(r, w)
+	user, err := sessions.ParseSessions(r, w)
 
 	if err != nil {
-		QuickErrors.NotLoggedIn(w)
+		quickerrors.NotLoggedIn(w)
 		return
 	}
 
-	Util.Conn("sensitive", "database", "student")
+	db.Conn("student")
 
 	// Close that database at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 
 
 	if ps.ByName("reqType") == "/Today" {
-		reminders, _ := json.Marshal(getReminders(DB.DB, time.Now().Add(time.Hour * -24), time.Now().Add(time.Hour * 24), user))
-		Util.Error(200, "OK", string(reminders), "Response", w)
+		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour * -24), time.Now().Add(time.Hour * 24), user))
+		util.Error(200, "OK", string(reminders), "Response", w)
 		return
 	} else {
 		// Get the required fields
 		startTime := r.URL.Query().Get("Start_Time")
 		endTime := r.URL.Query().Get("End_Time")
 
-		if Util.CompoundIsset(startTime, endTime) {
+		if util.CompoundIsset(startTime, endTime) {
 
 			// Start converting the dates to the correct format
 			startTimeDate, err1 := fmtdate.Parse("DD-MM-YYYY", startTime)
 			endTimeDate, err2 := fmtdate.Parse("DD-MM-YYYY", endTime)
 			if err1 != nil || err2 != nil {
-				QuickErrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
+				quickerrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
 			}
 
-			reminders, _ := json.Marshal(getReminders(DB.DB, startTimeDate, endTimeDate, user))
-			Util.Error(200, "OK", string(reminders), "Response", w)
+			reminders, _ := json.Marshal(getReminders(db.DB, startTimeDate, endTimeDate, user))
+			util.Error(200, "OK", string(reminders), "Response", w)
 
 		} else {
-			QuickErrors.MalformedRequest(w, "Missing parameters, check the API documentation")
+			quickerrors.MalformedRequest(w, "Missing parameters, check the API documentation")
 			return
 		}
 	}

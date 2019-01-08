@@ -1,0 +1,127 @@
+package jwt
+
+import (
+	"io/ioutil"
+	"time"
+	"errors"
+	"github.com/dgrijalva/jwt-go"
+	"os"
+	"go/build"
+)
+
+// NOTE ========== THE jwt PACKAGE ONLY TAKES AND DEALS IN MAPS AS IT IS MEANT TO BE INDEPENDENT OF THE OTHER PACKAGES
+
+/**
+	Func GetJWT:
+		@param student student
+		@param keypath string
+
+		returns string which is the jwt and returns an error if something wrong happened
+ **/
+func GenJWT(user map[string]interface{}) (string, error) {
+
+	// Get the GOPATH
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+
+	sensitiveDir := gopath + "/src/mynsb-api/sensitive"
+
+
+
+	// Attain student data from the student paramater
+	var username = user["student"]
+	var password = user["Password"]
+	var permissions = user["Permissions"]
+
+
+	// Generate a token
+	token := jwt.New(jwt.GetSigningMethod("HS256"))
+
+	// Start the claims
+	claims := token.Claims.(jwt.MapClaims)
+	claims["student"] = username
+	claims["Password"] = password
+	claims["Permissions"] = permissions
+	claims["Expires"] = time.Now().Add(time.Hour * 24 * 30)
+
+	// Read key
+	privKey, err := ioutil.ReadFile(sensitiveDir + "/keys/priv.txt")
+	if err != nil {
+		return "", errors.New("error generating jwt")
+	}
+
+	// Generate the signed token
+	signedToken, err := token.SignedString(privKey)
+	if err != nil {
+		return "", errors.New("error generating jwt")
+	}
+
+	// Throw back the signed token
+	return signedToken, nil
+}
+
+
+
+
+
+/**
+	Func ReadJWT:
+		@param jwt string
+
+		returns student data based on the current jwt
+ **/
+func ReadJWT(token string) (map[string]interface{}, error) {
+
+	// Get the GOPATH
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+
+	sensitiveDir := gopath + "/src/mynsb-api/sensitive"
+
+
+
+	// Decode the token
+
+	var permissions []string
+
+	// Decode token
+	tokenDec, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		// Read the token from the path provided
+		key, err := ioutil.ReadFile(sensitiveDir + "/keys/priv.txt")
+		if err != nil {
+			return nil, errors.New("error parsing jwt")
+		}
+
+		return []byte(key), nil
+
+	})
+
+	// Check for err
+	if err != nil || !tokenDec.Valid {
+		return make(map[string]interface{}), errors.New("invalid jwt")
+	}
+
+
+	// Get claims
+	claims := tokenDec.Claims.(jwt.MapClaims)
+	// Push to student
+
+	perm := claims["Permissions"].([]interface{})
+
+	// Convert to string
+	for _, b := range perm {
+		permissions = append(permissions, b.(string))
+	}
+
+	// Return that shit
+	var user = make(map[string]interface{})
+	user["student"] = claims["student"].(string)
+	user["Password"] = claims["Password"].(string)
+	user["Permissions"] = permissions
+
+	return user, nil
+}

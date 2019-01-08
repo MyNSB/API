@@ -1,0 +1,11 @@
+{
+  "Sport": "Soccer",
+  "Age Group": "u16",
+  "Team": "A",
+  "Locations": {
+    "Week 1": "Some random Addr",
+    "Week 2": "Some random second Addr",
+    "Week 3": "Some other random place",
+    "Week 4": null
+  }
+}

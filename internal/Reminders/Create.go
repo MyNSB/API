@@ -1,23 +1,23 @@
-package Reminders
+package reminders
 
 import (
-	"Sessions"
+	"mynsb-api/internal/sessions"
 	"net/http"
 	"github.com/julienschmidt/httprouter"
 	"strconv"
-	"Util"
-	"User"
+	"mynsb-api/internal/util"
+	"mynsb-api/internal/student"
 	"database/sql"
-	"DB"
+	"mynsb-api/internal/db"
 	"encoding/json"
 	"time"
 	"github.com/metakeule/fmtdate"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 	"errors"
 	"fmt"
 )
 
-func CreateReminder(db *sql.DB, user User.User, reminder Reminder) error {
+func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
 	// Convert the student ID into an integer
 	studentID, _ := strconv.Atoi(user.Name)
 	jsonTXT, _ := json.Marshal(reminder.Tags)
@@ -40,16 +40,16 @@ func CreateReminder(db *sql.DB, user User.User, reminder Reminder) error {
 func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 
-	user, _ := Sessions.ParseSessions(r, w)
+	user, _ := sessions.ParseSessions(r, w)
 
 	r.ParseForm()
 
 
 	// Login into database
-	Util.Conn("sensitive", "database", "admin")
+	db.Conn("admin")
 
 	// Close the connection at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 
 	// Get the post vars
@@ -61,12 +61,12 @@ func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	fmt.Printf("Form-Data", r.PostForm.Encode())
 
 	// Get the required fields
-	if Util.CompoundIsset(body, reminderDateTime, tagsTXT, subject) {
+	if util.CompoundIsset(body, reminderDateTime, tagsTXT, subject) {
 		// Decode the tags
 		var tags []string
 		err := json.Unmarshal([]byte(tagsTXT), &tags)
 		if err != nil {
-			QuickErrors.MalformedRequest(w, "Invalid Tags sent, must be in JSON format")
+			quickerrors.MalformedRequest(w, "Invalid Tags sent, must be in JSON format")
 			return
 		}
 
@@ -80,7 +80,7 @@ func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		// Parse the given date time
 		reminderDateTimeVal, err := fmtdate.Parse("DD-MM-YYYY hh:mm", reminderDateTime)
 		if err != nil {
-			QuickErrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
+			quickerrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
 			return
 		}
 
@@ -95,15 +95,15 @@ func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 
 
 		// Push everything into the database
-		err = CreateReminder(DB.DB, user, reminder)
+		err = CreateReminder(db.DB, user, reminder)
 		if err != nil {
-			QuickErrors.MalformedRequest(w, "Unable to create event, this could be because the date time your provided is in the past")
+			quickerrors.MalformedRequest(w, "Unable to create event, this could be because the date time your provided is in the past")
 			return
 		}
 
-		QuickErrors.OK(w)
+		quickerrors.OK(w)
 	} else {
-		QuickErrors.MalformedRequest(w, "Missing Parameters, check the API Documentation")
+		quickerrors.MalformedRequest(w, "Missing Parameters, check the API Documentation")
 		return
 	}
 }

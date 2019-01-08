@@ -1,7 +1,7 @@
-package Calendar
+package calendar
 
 import (
-	"Util"
+	"mynsb-api/internal/util"
 	"errors"
 	"fmt"
 	"github.com/Azure/go-ntlmssp"
@@ -9,8 +9,8 @@ import (
 	"github.com/metakeule/fmtdate"
 	"io/ioutil"
 	"net/http"
-	"QuickErrors"
-	"Sessions"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
 	"github.com/tidwall/gjson"
 )
 
@@ -96,11 +96,11 @@ func sendRequest(url string) (string, error) {
 // Http handler for calendar thingy ma bop
 func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Get the currently logged in user
+	// Get the currently logged in student
 
-	user, err := Sessions.ParseSessions(r, w)
-	if err != nil || !Util.ExistsString(user.Permissions, "student") {
-		QuickErrors.NotEnoughPrivledges(w)
+	user, err := sessions.ParseSessions(r, w)
+	if err != nil || !util.ExistsString(user.Permissions, "student") {
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
@@ -110,17 +110,17 @@ func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	dateEnd := r.URL.Query().Get("End")
 	fmt.Printf("Start: %s, End: %s", dateStart, dateEnd)
 	// If these variables do not exist just spew everything
-	if Util.CompoundIsset(dateStart, dateEnd) {
+	if util.CompoundIsset(dateStart, dateEnd) {
 		resp, status, err := GetBetween(dateStart, dateEnd)
 
 		if err != nil && status == 0 {
-			QuickErrors.InteralServerError(w)
+			quickerrors.InteralServerError(w)
 			return
 		} else if status != 200 {
-			Util.Error(status, "Something went horribly wrong", "This could be because a failed attempt to authenticate with the school servers, please try again later", "Something went horribly wrong", w)
+			util.Error(status, "Something went horribly wrong", "This could be because a failed attempt to authenticate with the school servers, please try again later", "Something went horribly wrong", w)
 			return
 		} else {
-			Util.Error(200, "OK", resp, "Calendar", w)
+			util.Error(200, "OK", resp, "calendar", w)
 			return
 		}
 	} else {
@@ -128,9 +128,9 @@ func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get everything first
 		resp, status, err := GetAll()
 		if err != nil {
-			QuickErrors.InteralServerError(w)
+			quickerrors.InteralServerError(w)
 		} else {
-			Util.Error(status, "Here: ", resp, "Here: ", w)
+			util.Error(status, "Here: ", resp, "Here: ", w)
 		}
 	}
 }

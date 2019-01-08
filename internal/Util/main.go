@@ -1,90 +1,20 @@
-package Util
+package util
 
 import (
-	"DB"
-	"User"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"strings"
-	"Sessions"
 	"crypto/sha256"
 	"encoding/hex"
 )
 
 
 const API_URL = "http://127.0.0.1"
-
-
-/**
-	Func getConnections:
-		return DB.Connection
-**/
-func GetConnection(detailsPath string) (DB.Connection, error) {
-	ConnectionDetails, err := ioutil.ReadFile(detailsPath)
-	if err != nil {
-		return DB.Connection{}, err
-	}
-
-	// Read the details from th file
-	detailsArray := strings.Split(string(ConnectionDetails), ",")
-
-	host := strings.Split(detailsArray[0], ":")[1]
-	port := strings.Split(detailsArray[1], ":")[1]
-
-	// Return the connection
-	return DB.Connection{
-		Host: host,
-		Port: port,
-	}, nil
-}
-
-
-
-
-func IsAdmin(user User.User) bool {
-	Permissions := user.Permissions
-	return ExistsString(Permissions, "admin")
-}
-
-
-
-
-// Conn function for connection to database
-// sensitiveLoc should look something like
-func Conn(sensitiveLoc, databasePath string, user string) error {
-	// Connect to database as user
-	connection, err := GetConnection(databasePath + "/details.txt")
-	if err != nil {
-		panic(err)
-	}
-	// If err != nil why??
-	connection.User = user
-	// Attain the user password
-	if pwd, err := ioutil.ReadFile(sensitiveLoc + "/user pass/"+user+".txt"); err == nil {
-		connection.Password = string(pwd)
-	} else {
-		return errors.New("could not authenticate")
-	}
-
-	connection.DatabaseName = "mynsb"
-
-	err = connection.Connect()
-	if err != nil {
-		return errors.New("could not connect to database")
-	}
-
-	return nil
-}
-
-
 
 
 
@@ -142,16 +72,6 @@ func CompoundIsset(vars ...string) bool {
 }
 
 
-
-func UserIsAllowed(r *http.Request, w http.ResponseWriter, requirements ...string) (bool, User.User) {
-	user, err := Sessions.ParseSessions(r, w)
-	if err != nil {
-		return false, User.User{}
-	}
-	return isSubset(requirements, user.Permissions), user
-}
-
-
 func HashString(toHash string) string {
 	// Create a hasher
 	h := sha256.New()
@@ -165,7 +85,7 @@ func HashString(toHash string) string {
 
 
 
-func isSubset(first, second []string) bool {
+func IsSubset(first, second []string) bool {
 	for _, val := range first {
 		if !ExistsString(second, val) {
 			return false

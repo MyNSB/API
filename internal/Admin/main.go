@@ -1,7 +1,7 @@
-package Admin
+package admin
 
 import (
-	"User"
+	"mynsb-api/internal/student"
 	"database/sql"
 	"encoding/json"
 )
@@ -12,8 +12,8 @@ type Admin struct {
 	Permissions []string
 }
 
-func AdminToUser(admin Admin) User.User {
-	User := User.User{
+func AdminToUser(admin Admin) student.User {
+	User := student.User{
 		Name:        admin.Name,
 		Password:    admin.Password,
 		Permissions: admin.Permissions,

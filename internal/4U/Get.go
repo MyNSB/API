@@ -1,15 +1,15 @@
 package FourU
 
 import (
-	"DB"
-	"Util"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/util"
 	"database/sql"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 	"github.com/metakeule/fmtdate"
 	"net/http"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 	"errors"
 )
 
@@ -23,9 +23,9 @@ import (
 func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Start up database
-	Util.Conn("sensitive", "database", "student")
+	db.Conn("student")
 	// Close the database at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 	// Determine the request type for the incoming request
 	requestType, params := determineRequestType(r)
@@ -36,25 +36,25 @@ func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 		case requestType: // Request type = all {check function documentation}
 			// Perform the get all function
-			articles := GetAll(DB.DB)
+			articles := GetAll(db.DB)
 			// Encode result to json
 			bytes, _ := json.Marshal(articles)
 
-			// Encode result and return it to the user
-			Util.Error(200, "OK", string(bytes), "Response", w)
+			// Encode result and return it to the student
+			util.Error(200, "OK", string(bytes), "Response", w)
 
 		default: // Request type = between {check function documentation}
 
 			// Perform it
-			res, err := GetBetween(params, DB.DB)
+			res, err := GetBetween(params, db.DB)
 			if err != nil {
-				QuickErrors.InteralServerError(w)
+				quickerrors.InteralServerError(w)
 				return
 			}
 
 			// encode and return the result
 			bytes, _ := json.Marshal(res)
-			Util.Error(200, "Ok", string(bytes), "Response", w)
+			util.Error(200, "Ok", string(bytes), "Response", w)
 	}
 }
 
@@ -67,7 +67,7 @@ func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 /*
 	GetAll returns all 4U articles currently in the database, once mynsb grows this will have to shrink to the past year but for now it can stay as the entire db
 	@params;
-		db *sql.DB
+		db *sql.db
 */
 func GetAll(db *sql.DB) []Article {
 	article, _ := performRequest(db, "SELECT * FROM four_u")
@@ -79,7 +79,7 @@ func GetAll(db *sql.DB) []Article {
 	Getbetween returns all function between specified times
 	@params;
 		times map[string]string
-		db *sql.DB
+		db *sql.db
  */
 func GetBetween(times map[string]string, db *sql.DB) ([]Article, error) {
 	// Convert the start and end to actual time values
@@ -119,7 +119,7 @@ func determineRequestType(r *http.Request) (bool, map[string]string) {
 	endTXT := r.URL.Query().Get("End")
 
 	// Determine type of request based on parsed parameters
-	if Util.CompoundIsset(startTXT, endTXT) {
+	if util.CompoundIsset(startTXT, endTXT) {
 		typeReq = false
 	} else {
 		typeReq = true
@@ -137,7 +137,7 @@ func determineRequestType(r *http.Request) (bool, map[string]string) {
 /*
 	performRequest performs a request given a query and some arguments it returns an array or articles and a possible error
 	@params;
-		db *sql.DB
+		db *sql.db
 		query string
 		args ...interface{}
  */

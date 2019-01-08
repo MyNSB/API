@@ -1,21 +1,21 @@
-package Reminders
+package reminders
 
 import (
 	"database/sql"
 	"errors"
 	"net/http"
 	"github.com/julienschmidt/httprouter"
-	"Sessions"
-	"QuickErrors"
-	"Util"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/util"
 	"strconv"
-	"DB"
+	"mynsb-api/internal/db"
 )
 
 func deleteEvent(db *sql.DB, reminderId, studentID int) error {
 	_, err := db.Exec("DELETE FROM reminders WHERE reminder_id = $1 AND student_id = $2", reminderId, studentID)
 	if err != nil {
-		return errors.New("user does not own this reminder")
+		return errors.New("student does not own this reminder")
 	}
 
 	return nil
@@ -35,13 +35,13 @@ func DeleteReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	r.ParseForm()
 
 
-	Util.Conn("sensitive", "database", "admin")
-	defer DB.DB.Close()
+	db.Conn("admin")
+	defer db.DB.Close()
 
 
-	user, err := Sessions.ParseSessions(r, w)
-	if err != nil || !Util.ExistsString(user.Permissions, "student") {
-		QuickErrors.NotEnoughPrivledges(w)
+	user, err := sessions.ParseSessions(r, w)
+	if err != nil || !util.ExistsString(user.Permissions, "student") {
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
@@ -49,21 +49,21 @@ func DeleteReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	reminderIDTXT := r.Form.Get("Reminder_ID")
 
 	// Determine if the reminder id is really set or not
-	if Util.Isset(reminderIDTXT) {
+	if util.Isset(reminderIDTXT) {
 
 		// Begin the conversion from text to int for all the ids
 		studentID, _ := strconv.Atoi(user.Name)
 		reminderID, err := strconv.Atoi(reminderIDTXT)
 		if err != nil {
-			QuickErrors.MalformedRequest(w, "Reminder ID is not an integer")
+			quickerrors.MalformedRequest(w, "Reminder ID is not an integer")
 			return
 		}
 
-		deleteEvent(DB.DB, reminderID, studentID)
-		QuickErrors.OK(w)
+		deleteEvent(db.DB, reminderID, studentID)
+		quickerrors.OK(w)
 
 	} else {
-		QuickErrors.MalformedRequest(w, "Missing parameters, please refer to the API documentation")
+		quickerrors.MalformedRequest(w, "Missing parameters, please refer to the API documentation")
 		return
 	}
 }

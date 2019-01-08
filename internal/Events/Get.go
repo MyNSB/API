@@ -1,8 +1,8 @@
-package Events
+package events
 
 import (
-	"DB"
-	"Util"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/util"
 	"database/sql"
 	_ "database/sql"
 	json2 "encoding/json"
@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"net/http"
 	"strconv"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 	"github.com/metakeule/fmtdate"
 	"errors"
 )
@@ -20,9 +20,9 @@ import (
 // HTTP handler for attaining all events
 func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Connect to the database
-	Util.Conn("sensitive", "database", "student")
+	db.Conn("student")
 	// Close the request at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 	// Determine the request type and get the parameters
 	requestType, params := determineRequestType(r)
@@ -32,7 +32,7 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	switch requestType{
 	case "GetAll":
 		// Perform that function
-		json, _ := GetAll(DB.DB)
+		json, _ := GetAll(db.DB)
 		// Json encode the result set
 		jsonResp, _ = json2.Marshal(json)
 
@@ -40,19 +40,19 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get the event id
 		eventId, _ := strconv.Atoi(params["eventID"])
 		// Perform the function
-		json, _ := Get(Event{EventID: int64(eventId)}, DB.DB)
+		json, _ := Get(Event{EventID: int64(eventId)}, db.DB)
 		// Encode the response
 		jsonResp, _ = json2.Marshal(json)
 	case "Range":
-		json, _ := GetBetween(DB.DB, params["start"], params["end"])
+		json, _ := GetBetween(db.DB, params["start"], params["end"])
 		// Encode the response
 		jsonResp, _ = json2.Marshal(json)
 	default:
-		QuickErrors.NotFound(w)
+		quickerrors.NotFound(w)
 		return
 	}
 
-	Util.Error(200, "OK", string(jsonResp), "Result: ", w)
+	util.Error(200, "OK", string(jsonResp), "Result: ", w)
 }
 
 
@@ -64,8 +64,8 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 /*
 	Get just returns an event given a particular event id
 	@params;
-		event Events.Event
-		db *sql.DB
+		event events.Event
+		db *sql.db
  */
 func Get(event Event, db *sql.DB) (Event, error) {
 	// Extract necessary details
@@ -78,7 +78,7 @@ func Get(event Event, db *sql.DB) (Event, error) {
 /*
 	GetBetween returns all events between two given date strings
 	@params;
-		db *sql.DB
+		db *sql.db
 		start string
 		end string
  */
@@ -101,7 +101,7 @@ func GetBetween(db *sql.DB, start string, end string)  ([]Event, error){
 /*
 	GetAll returns all currently active events
 	@params;
-		db *sql.DB
+		db *sql.db
  */
 func GetAll(db *sql.DB) ([]Event, error) {
 	return performRequest(db, "SELECT * FROM events")
@@ -118,7 +118,7 @@ func GetAll(db *sql.DB) ([]Event, error) {
 /*
 	performrequest takes a question and some arguments and returns an array of events corresponding to that query
 	@params;
-		db *sql.DB
+		db *sql.db
 		query string
 		args ...interface{}
  */
@@ -160,7 +160,7 @@ func determineRequestType(r *http.Request) (string, map[string]string) {
 	typeReq := ""
 	if r.URL.Query().Get("Event_ID") == "" {
 		typeReq = "GetAll"
-	} else if Util.CompoundIsset(r.URL.Query().Get("Start"), r.URL.Query().Get("End")) {
+	} else if util.CompoundIsset(r.URL.Query().Get("Start"), r.URL.Query().Get("End")) {
 		typeReq = "Range"
 	} else{
 		typeReq = "Get"

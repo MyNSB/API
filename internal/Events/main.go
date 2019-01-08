@@ -1,4 +1,4 @@
-package Events
+package events
 
 import (
 	"mime/multipart"

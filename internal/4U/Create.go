@@ -1,8 +1,8 @@
 package FourU
 
 import (
-	"DB"
-	"Util"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/util"
 	"database/sql"
 	"errors"
 	"github.com/julienschmidt/httprouter"
@@ -11,8 +11,9 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
 	"strconv"
+	"mynsb-api/internal/sessions"
 )
 
 
@@ -26,55 +27,55 @@ import (
 func CreateFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Connect to database
-	Util.Conn("sensitive", "database", "admin")
+	db.Conn("admin")
 	// Close database at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
-	// Determine if the user is allowed here and if not force them to leave
-	allowed, _ := Util.UserIsAllowed(r, w, "visions", "admin")
+	// Determine if the student is allowed here and if not force them to leave
+	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
 	if !allowed {
-		QuickErrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
 	// Get the incoming article
 	article, err := getIncomingArticle(r)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
+		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
 	}
 
 	// Push the article into the database
-	err = CreateFourU(article, DB.DB)
+	err = CreateFourU(article, db.DB)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "4U Article/Issue already exists")
+		quickerrors.MalformedRequest(w, "4U Article/Issue already exists")
 		return
 	}
 
-	QuickErrors.OK(w)
+	quickerrors.OK(w)
 }
 
 // HTTP handler for article creation
 func CreateFourUArticleHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Connect to database
-	Util.Conn("sensitive", "database", "admin")
+	db.Conn("admin")
 	// Close database at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 	// Parse the incomming article
 	article, err := getIncomingArticleSpecific(r)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
+		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
 	}
 
 	// Finally push the new article
-	err = Create4UArtciles(Article{ArticleID: article.ArticleParentID}, article, DB.DB)
+	err = Create4UArtciles(Article{ArticleID: article.ArticleParentID}, article, db.DB)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "Looks like that article already exists")
+		quickerrors.MalformedRequest(w, "Looks like that article already exists")
 		return
 	}
 
-	QuickErrors.OK(w)
+	quickerrors.OK(w)
 }
 
 
@@ -83,16 +84,16 @@ func CreateFourUArticleHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	CreateFourU takes an article and pushes that into the database it also saves the incoming image for that article returns an error on a failure
 	@params;
 		article FourU.Article
-		db *sql.DB
+		db *sql.db
  */
 func CreateFourU(article Article, db *sql.DB) error {
 	// Check that the article does not currently exist in the database
-	if count, _ := Util.CheckCount(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", article.ArticleName, article.Link, article.TypePost); count > 0 {
+	if count, _ := util.CheckCount(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", article.ArticleName, article.Link, article.TypePost); count > 0 {
 		return errors.New("article already exists")
 	}
 
 	// Hash the issue link for diversity
-	sha := Util.HashString(article.Link)
+	sha := util.HashString(article.Link)
 	// Save the article's image
 	err := createImage(article, sha)
 	if err != nil {
@@ -100,7 +101,7 @@ func CreateFourU(article Article, db *sql.DB) error {
 	}
 
 	// Set the image url of the article
-	article.ArticleImageUrl = Util.API_URL + "/api/v1/assets/4U/" + article.TypePost + "/" + sha + "/" + article.ArticleName + "/" + article.PictureHeader.Filename
+	article.ArticleImageUrl = util.API_URL + "/api/v1/assets/4U/" + article.TypePost + "/" + sha + "/" + article.ArticleName + "/" + article.PictureHeader.Filename
 
 	// Finally push everything into the database
 	db.Exec("INSERT INTO four_u (article_name, article_desc, article_publish_date, article_image_url, link, type) VALUES($1, $2, $3::date, $4, $5, $6)",
@@ -127,7 +128,7 @@ func CreateFourU(article Article, db *sql.DB) error {
 	}
 
 	// Check that the article does not exist
-	if count, _ := Util.CheckCount(db, "SELECT * FROM four_u_articles WHERE four_u_article = $1 AND four_u_article_name = $2", article.ArticleID, uArticle.ArticleName); count > 0 {
+	if count, _ := util.CheckCount(db, "SELECT * FROM four_u_articles WHERE four_u_article = $1 AND four_u_article_name = $2", article.ArticleID, uArticle.ArticleName); count > 0 {
 		// Looks like the article already exists
 		return errors.New("Article already exists")
 	}
@@ -196,7 +197,7 @@ func getIncomingArticle(r *http.Request) (Article, error) {
 	typePost := r.Form.Get("Post_Type")
 
 	// Article is invalid so throw an error
-	if !(Util.CompoundIsset(articleName, articleDesc, issuuLink, typePost) || !(typePost == "Article" || typePost == "Issue")) {
+	if !(util.CompoundIsset(articleName, articleDesc, issuuLink, typePost) || !(typePost == "Article" || typePost == "Issue")) {
 		return Article{}, errors.New("invalid article")
 	}
 
@@ -232,7 +233,7 @@ func getIncomingArticleSpecific(r *http.Request) (FourUArticle, error) {
 
 
 	// Determine if everything is set
-	if !(Util.CompoundIsset(articleDesc, articleName, parentIssueID, pageStart)) {
+	if !(util.CompoundIsset(articleDesc, articleName, parentIssueID, pageStart)) {
 		return FourUArticle{}, errors.New("Invalid article")
 	}
 

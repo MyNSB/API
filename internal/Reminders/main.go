@@ -1,4 +1,4 @@
-package Reminders
+package reminders
 
 import "time"
 

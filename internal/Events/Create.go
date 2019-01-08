@@ -1,9 +1,9 @@
-package Events
+package events
 
 import (
-	"DB"
-	"User"
-	"Util"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
 	"database/sql"
 	"errors"
 	"github.com/julienschmidt/httprouter"
@@ -12,7 +12,8 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"QuickErrors"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
 )
 
 
@@ -31,16 +32,16 @@ import (
 
 		returns nothing and just creates an event
 **/
-func Create(user User.User, event Event, db *sql.DB) error {
+func Create(user student.User, event Event, db *sql.DB) error {
 
-	// Determine if the user is an admin
-	if Util.IsAdmin(user) {
+	// Determine if the student is an admin
+	if student.IsAdmin(user) {
 
 
 		// EVENT EXISTS DETERMINATION ===============================
 		// Check that the event does not exist
 		// Determine the count using the util function
-		if count, _ := Util.CheckCount(db, "SELECT * FROM events WHERE event_name = $1 AND event_organiser = $2", event.EventName, event.EventOrganiser); count > 0 {
+		if count, _ := util.CheckCount(db, "SELECT * FROM events WHERE event_name = $1 AND event_organiser = $2", event.EventName, event.EventOrganiser); count > 0 {
 			return errors.New("event already exists")
 		}
 		// EVENT EXISTS DETERMINATION END ===============================
@@ -50,13 +51,13 @@ func Create(user User.User, event Event, db *sql.DB) error {
 		// IMAGE CREATION =========================================
 		// Create image for the event
 
-		if _, err := os.Stat("assets/Events/" + event.EventOrganiser); os.IsNotExist(err) {
-			os.Mkdir("assets/Events/" + event.EventOrganiser, 0777)
+		if _, err := os.Stat("assets/events/" + event.EventOrganiser); os.IsNotExist(err) {
+			os.Mkdir("assets/events/" + event.EventOrganiser, 0777)
 		}
 
-		os.Mkdir("assets/Events/" + event.EventOrganiser + "/"  + event.EventName, 0777)
+		os.Mkdir("assets/events/" + event.EventOrganiser + "/"  + event.EventName, 0777)
 
-		file, err := os.Create("assets/Events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename)
+		file, err := os.Create("assets/events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename)
 
 		if err != nil {
 			panic(err)
@@ -66,7 +67,7 @@ func Create(user User.User, event Event, db *sql.DB) error {
 		defer file.Close()
 		io.Copy(file, event.Picture)
 		// TODO: Change in production to actual ip
-		event.EventPictureURL = Util.API_URL + "/api/v1/assets/Events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename
+		event.EventPictureURL = util.API_URL + "/api/v1/assets/events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename
 		// END IMAGE CREATION =====================================
 
 
@@ -80,7 +81,7 @@ func Create(user User.User, event Event, db *sql.DB) error {
 		return nil
 	}
 
-	return errors.New("user does not have sufficient privileges")
+	return errors.New("student does not have sufficient privileges")
 }
 
 
@@ -101,9 +102,9 @@ func validateDateTime(dateStart, format string) (bool, time.Time) {
  /* getIncomingEvent takes a request and returns the incoming event for that request
  		@params;
  			r *http.Request
- 			user User.User
+ 			student student.student
   */
-func getIncomingEvent(r *http.Request, user User.User) (Event, error) {
+func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 	eventName := r.FormValue("Event_Name")
 	eventEnd  := r.FormValue("Event_End")
 	eventStart := r.FormValue("Event_Start")
@@ -113,7 +114,7 @@ func getIncomingEvent(r *http.Request, user User.User) (Event, error) {
 	eventLongDesc := r.FormValue("Event_Long_Desc")
 
 
-	if Util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) && Util.IsAdmin(user) {
+	if util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) && student.IsAdmin(user) {
 		// Attain the image
 
 		// Get the image uploading thing
@@ -193,16 +194,16 @@ func parseDatesinto(requestedEvent *Event, eventStartstr string, eventEndstr str
 func CreateEventHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Connect to database
-	Util.Conn("sensitive", "database", "admin")
+	db.Conn("admin")
 
 	// Close the database at the end
-	defer DB.DB.Close()
+	defer db.DB.Close()
 
 
-	// Get the user struct from an existing session and determin if they are allowed here
-	allowed, user := Util.UserIsAllowed(r, w, "admin")
+	// Get the student struct from an existing session and determin if they are allowed here
+	allowed, user := sessions.UserIsAllowed(r, w, "admin")
 	if !allowed {
-		QuickErrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
 
@@ -211,16 +212,16 @@ func CreateEventHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 
 	event, err := getIncomingEvent(r, user)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "Missing parameters, user was invalid or the dates you provided were invalid")
+		quickerrors.MalformedRequest(w, "Missing parameters, student was invalid or the dates you provided were invalid")
 		return
 	}
 
 	// Push the event
-	err = Create(user, event, DB.DB)
+	err = Create(user, event, db.DB)
 	if err != nil {
-		QuickErrors.MalformedRequest(w, "Event already exists")
+		quickerrors.MalformedRequest(w, "Event already exists")
 		return
 	}
 
-	QuickErrors.OK(w)
+	quickerrors.OK(w)
 }

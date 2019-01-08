@@ -1,3 +1,0 @@
-# WIP
-
-This folder contains all code that has been pushed away for future development during a future release of the API...

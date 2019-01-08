@@ -1,8 +1,8 @@
-package Timetable
+package timetable
 
 import (
-	"QuickErrors"
-	"Util"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/util"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -11,6 +11,9 @@ import (
 	"strconv"
 	"github.com/buger/jsonparser"
 	"github.com/julienschmidt/httprouter"
+	"mynsb-api/internal/sessions"
+	"os"
+	"go/build"
 )
 
 
@@ -38,7 +41,7 @@ type TimeTable []Class
 /*
 	CORE FUNCTIONS =============================
  */
-/* GetSubject returns the subject that the user has requested through a given period and a given day
+/* GetSubject returns the subject that the student has requested through a given period and a given day
  		@params;
 			StudentID string
 			Period string,
@@ -86,7 +89,7 @@ func GetSubject(StudentID string, Period string, Day int, filepath string) (Clas
 }
 
 
-/* getYear returns the year a specific user is in, it is only really used during authentication when the user details are stored in the database
+/* getYear returns the year a specific student is in, it is only really used during authentication when the student details are stored in the database
 		@params;
 			StudentID string
 			filepath string
@@ -144,7 +147,7 @@ func RetrieveAll(StudentID string, filepath string) (interface{}, error) {
  */
 func GetWholeDay(day int, studentID string, filepath string) ([]Class, error) {
 
-	// Timetable type that we start with
+	// timetable type that we start with
 	timetables := []Class{}
 
 	var data map[string]interface{}
@@ -266,20 +269,30 @@ func getJson(filepath string) (map[string]interface{}, error) {
 // Http handler for timetable exports
 // Should be moved somewhere else
 func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Get the GOPATH
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+
+	timetableDir := gopath + "/src/mynsb-api/internal/timetable/daemons/Timetables.json"
+
+
+
 	typeReq := ""
 
 	var StudentID string
 
-	allowed, user := Util.UserIsAllowed(r, w, "student")
+	allowed, user := sessions.UserIsAllowed(r, w, "student")
 	if !allowed {
-		QuickErrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivledges(w)
 		return
 	}
-	// Set the student id variable from the user
+	// Set the student id variable from the student
 	StudentID = user.Name
 
 	// Overview........
-	// Get the user details
+	// Get the student details
 	Period := r.URL.Query().Get("Period")
 	Day := r.URL.Query().Get("Day")
 
@@ -294,44 +307,44 @@ func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	if typeReq == "GetSubject" {
 		// Shift through it and read it carefully
 		day, _ := strconv.Atoi(Day)
-		resp, err := GetSubject(StudentID, Period, day, "src/Timetable/Daemons/Timetables.json")
+		resp, err := GetSubject(StudentID, Period, day, timetableDir)
 		if err != nil {
-			QuickErrors.InteralServerError(w)
+			quickerrors.InteralServerError(w)
 			return
 		}
 
 		// Return that
 		jsonResp, _ := json.Marshal(resp)
 		// Return response
-		Util.Error(200, "OK", string(jsonResp), "Response", w)
+		util.Error(200, "OK", string(jsonResp), "Response", w)
 
 	} else if typeReq == "GetAll" {
 		// Attain data
-		Data, err := RetrieveAll(StudentID, "src/Timetable/Daemons/Timetables.json")
+		Data, err := RetrieveAll(StudentID, timetableDir)
 		if err != nil {
-			QuickErrors.InteralServerError(w)
+			quickerrors.InteralServerError(w)
 			return
 		}
 
 		// Convert to json
 		jsonresp, _ := json.Marshal(Data)
 
-		Util.Error(200, "OK", string(jsonresp), "Response", w)
+		util.Error(200, "OK", string(jsonresp), "Response", w)
 
 	} else if typeReq == "GetDay" {
 		// Convert the day
 		day, _ := strconv.Atoi(Day)
 
 		// Attain data
-		Data, err := GetWholeDay(day, StudentID, "src/Timetable/Daemons/Timetables.json")
+		Data, err := GetWholeDay(day, StudentID, timetableDir)
 		if err != nil {
-			QuickErrors.InteralServerError(w)
+			quickerrors.InteralServerError(w)
 			return
 		}
 
 		// Convert to json
 		jsonresp, _ := json.Marshal(Data)
 
-		Util.Error(200, "OK", string(jsonresp), "Response", w)
+		util.Error(200, "OK", string(jsonresp), "Response", w)
 	}
 }
