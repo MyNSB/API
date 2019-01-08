@@ -44,7 +44,6 @@ Thumbs.db
 .glide/
 
 # Golang project vendor packages which should be ignored
-vendor/
 .idea/
 
 
