@@ -1,0 +1,32 @@
+language: go
+
+go:
+  - 1.7.x
+
+sudo: false
+
+branches:
+    only:
+        - master
+
+
+go_import_path: github.com/MyNSB/API
+
+install:
+    - export GOPATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace:$GOPATH:$GOPATH/src/github.com/MyNSB/API"
+    - export PATH="${TRAVIS_BUILD_DIR}/Godeps/_workspace/bin:$PATH"
+
+before_script:
+    - go get github.com/lib/pq
+    - go get github.com/dgrijalva/jwt-go
+    - go get github.com/SermoDigital/jose
+    - go get github.com/Azure/go-ntlmssp
+    - go get github.com/julienschmidt/httprouter
+    - go get github.com/metakeule/fmtdate
+    - go get github.com/gorilla/sessions
+    - go get github.com/buger/jsonparser
+    - go get github.com/rs/cors
+    - go get github.com/tidwall/gjson
+
+script: 
+    go test ./Tests

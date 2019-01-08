@@ -1,0 +1,42 @@
+{
+  "Sports": {
+    "Grade": {
+      "Soccer": {
+        "Categories": {
+          "u15": {
+            "Teams": [
+              "A",
+              "B"
+            ]
+          },
+          "u16": {
+            "Teams": [
+              "A",
+              "B"
+            ]
+          },
+          "u17": {
+            "Teams": [
+              "A",
+              "B"
+            ]
+          }
+        }
+      },
+      "Basketball": {
+        "Categories": {
+          "u15": {
+            "Teams": [
+              "A",
+              "B"
+            ]
+          }
+        }
+      }
+    },
+    "Rec": [
+      "Rec Basketball",
+      "Volleyball"
+    ]
+  }
+}

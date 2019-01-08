@@ -1,0 +1,53 @@
+# Compiled source #
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+
+# Logs and databases #
+*.log
+*.sql
+*.sqlite
+
+ExportTimetable.sh
+sensitive
+
+# OS generated files #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+
+# Golang project vendor packages which should be ignored
+vendor/
+.idea/
+
+
+# Private files
+DBPassword.txt
+setupPgCron.sh
