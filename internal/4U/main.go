@@ -18,16 +18,16 @@ type Issue struct {
 	TypePost      string
 }
 
-// Function merely takes a row and scans it into an article, minimal documentation required
-func (article *Issue) ScanFrom(rows *sql.Rows) {
+// Parses SQL query result into current Issue object
+func (issue *Issue) ScanFrom(rows *sql.Rows) {
 	rows.Scan(
-		article.ID,
-		&article.Name,
-		&article.Desc,
-		&article.PublishDate,
-		&article.ImageUrl,
-		&article.Link,
-		&article.TypePost)
+		&issue.ID,
+		&issue.Name,
+		&issue.Desc,
+		&issue.PublishDate,
+		&issue.ImageUrl,
+		&issue.Link,
+		&issue.TypePost)
 }
 
 type Article struct {
