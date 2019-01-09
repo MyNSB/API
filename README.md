@@ -32,13 +32,13 @@ All files are located in the `internal` folder.
     
 ## Usage
  - If the API has been added to your `GOPATH` and `GOBIN` has been added to your `PATH` variable then execution of the API is as follows:
- - ```console
+   ```console
      foo@bar:~$ go install mynsb-api
      foo@bar:~$ mynsb-api
-     ```
+   ```
 - This will start a local testing server on port `8080`
 - If you are unable to install the API this way then a simple compilation of the source code will work too.
-- ```console
+  ```console
     foo@bar:~$ go build $GOPATH/src/mynsb-api/main.go
   ```
   
