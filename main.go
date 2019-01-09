@@ -1,29 +1,29 @@
 package main
 
 import (
+	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 	_4U "mynsb-api/internal/4U"
 	"mynsb-api/internal/admin"
+	"mynsb-api/internal/auth"
 	"mynsb-api/internal/belltimes"
 	"mynsb-api/internal/events"
-	"mynsb-api/internal/reminders"
 	"mynsb-api/internal/events/calendar"
+	"mynsb-api/internal/reminders"
 	"mynsb-api/internal/student/userdetails"
-	"mynsb-api/internal/auth"
-	"mynsb-api/internal/week"
 	"mynsb-api/internal/timetable"
-	"github.com/julienschmidt/httprouter"
+	"mynsb-api/internal/week"
 	"net/http"
-	"github.com/rs/cors"
 )
 
-// 404 Handler
+// NotFoundHandler deals is the response to a 404 request
 func NotFoundHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Header().Set("Content-Type", "text/json")
 	w.Write([]byte(`{"Status":{"Code": 404, "Status Message":"404 Not Found"},"Message": {"Title":"An Error Occurred", "Body":"The file you requested could not be found on this server."}}`))
 }
 
-// Index handler
+// IndexHandler is just our plain index page
 func IndexHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/json")
@@ -45,46 +45,46 @@ func main() {
 
 	// TIMETABLE ==================
 	// Handle timetable exports
-	router.GET("/api/v1/timetable/Get", timetable.ExportTimetable)
+	router.GET("/api/v1/timetable/Get", timetable.ExportHandler)
 	// END TIMETABLE ==============
 
 	// EVENTS ===================
 	// Handle event creation
-	router.POST("/api/v1/events/Create", events.CreateEventHandler)
-	router.GET("/api/v1/events/Get", events.GetEvents)
-	router.GET("/api/v1/events/calendar/Get", calendar.GetCalendar)
+	router.POST("/api/v1/events/Create", events.CreateHandler)
+	router.GET("/api/v1/events/Get", events.GetHandler)
+	router.GET("/api/v1/events/calendar/Get", calendar.GetHandler)
 	// END EVENTS =====================
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
 	// Handle authentication
-	router.POST("/api/v1/student/auth", auth.UserAuthHandler)
-	router.POST("/api/v1/admin/auth", auth.AdminAuthHandler)
-	router.POST("/api/v1/student/Logout", auth.Logout)
-	router.GET("/api/v1/student/GetDetails", userdetails.GetDetailsHandler)
-	router.GET("/api/v1/admin/GetDetails", admin.GetDetailsHandler)
+	router.POST("/api/v1/student/auth", auth.UserHandler)
+	router.POST("/api/v1/admin/auth", auth.AdminHandler)
+	router.POST("/api/v1/student/LogoutHandler", auth.LogoutHandler)
+	router.GET("/api/v1/student/GetDetails", userdetails.GetHandler)
+	router.GET("/api/v1/admin/GetDetails", admin.GetHandler)
 	// END AUTHENTICATION AND USERS ==================
 
 	// Handler for file server for assets e.t.c
 	router.ServeFiles("/api/v1/assets/*filepath", http.Dir("assets"))
 
 	// BELL TIMES ====================================
-	router.GET("/api/v1/belltimes/Get", belltimes.ServeBellTimes)
+	router.GET("/api/v1/belltimes/Get", belltimes.GetHandler)
 	// END BELL TIMES ================================
 
 	// 4U STUFF =======================================
-	router.GET("/api/v1/4U/Get", _4U.GetFourUHandler)
-	router.POST("/api/v1/4U/Create", _4U.CreateFourUHandler)
-	router.POST("/api/v1/4U/Create/Article", _4U.CreateFourUArticleHandler)
+	router.GET("/api/v1/4U/Get", _4U.GetIssueHandler)
+	router.POST("/api/v1/4U/Create", _4U.CreateIssueHandler)
+	router.POST("/api/v1/4U/Create/Issue", _4U.CreateArticleHandler)
 	// END 4U STUFF ===================================
 
 	// REMINDERS ======================================
-	router.POST("/api/v1/reminders/Create", reminders.CreateReminderHandler)
-	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetRemindersHandler)
-	router.POST("/api/v1/reminders/Delete", reminders.DeleteReminderHandler)
+	router.POST("/api/v1/reminders/Create", reminders.CreateHandler)
+	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetHandler)
+	router.POST("/api/v1/reminders/Delete", reminders.DeleteHandler)
 	// END REMINDERS STUFF ============================
 
 	// WEEK A B STUFF =================================
-	router.GET("/api/v1/week/Get", week.GetWeek)
+	router.GET("/api/v1/week/Get", week.GetHandler)
 	// END WEEK A B STUFF =============================
 
 	c := cors.AllowAll().Handler(router)

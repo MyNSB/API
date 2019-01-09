@@ -1,10 +1,10 @@
 package jwt
 
 import (
-	"time"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"mynsb-api/internal/filesint"
+	"time"
 )
 
 // NOTE ========== THE jwt PACKAGE ONLY TAKES AND DEALS IN MAPS AS IT IS MEANT TO BE INDEPENDENT OF THE OTHER PACKAGES

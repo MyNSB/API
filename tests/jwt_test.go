@@ -2,8 +2,8 @@ package tests
 
 import (
 	"User"
-	"testing"
 	"User/JWT"
+	"testing"
 )
 
 func TestJWT(t *testing.T) {

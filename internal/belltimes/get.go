@@ -1,21 +1,21 @@
 package belltimes
 
 import (
-	"mynsb-api/internal/util"
 	json2 "encoding/json"
+	"errors"
 	"github.com/julienschmidt/httprouter"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/util"
 	"net/http"
 	"strconv"
-	"mynsb-api/internal/quickerrors"
-	"errors"
-	"mynsb-api/internal/sessions"
 )
 
 // Handler for serving timetables
 /*
 	http handlers require minimal documentation
- */
-func ServeBellTimes(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+*/
+func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Determine if the currently logged in student is allowed here
 	allowed, _ := sessions.UserIsAllowed(r, w, "student")
@@ -36,14 +36,14 @@ func ServeBellTimes(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 
 /*
 	@ UTIL FUNCTIONS ===========================================
- */
+*/
 /*
 	getTimes returns the times given specific parameters
 	@params;
 		term string
 		day string
 		assembly bool
- */
+*/
 func getTimes(term string, day string, assembly bool) string {
 	// Load up the hash map
 	Init()
@@ -78,10 +78,10 @@ func getTimes(term string, day string, assembly bool) string {
 }
 
 /*
- 	getParams returns the parameters of the incoming request
- 	@params;
- 		r *http.Request
-  */
+	getParams returns the parameters of the incoming request
+	@params;
+		r *http.Request
+*/
 func getParams(r *http.Request) (map[string]interface{}, error) {
 	term := r.URL.Query().Get("Term")
 	day := r.URL.Query().Get("Day")
@@ -109,4 +109,4 @@ func getParams(r *http.Request) (map[string]interface{}, error) {
 
 /*
 	@ END UTIL FUNCTIONS ===========================================
- */
+*/

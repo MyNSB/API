@@ -1,8 +1,8 @@
 package quickerrors
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 // Function to remove all that ugly code error e.t.c

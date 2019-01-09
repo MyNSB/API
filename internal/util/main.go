@@ -1,13 +1,13 @@
 package util
 
 import (
-	"database/sql"
-	"fmt"
-	"net/http"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
-	"os"
+	"fmt"
 	"go/build"
+	"net/http"
+	"os"
 )
 
 const APIURL = "http://127.0.0.1"

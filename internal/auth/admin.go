@@ -1,24 +1,24 @@
 package auth
 
 import (
-	"mynsb-api/internal/db"
-	"mynsb-api/internal/util"
 	"database/sql"
 	"errors"
-	"net/http"
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
-	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/admin"
+	"mynsb-api/internal/db"
 	"mynsb-api/internal/jwt"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/util"
+	"net/http"
 )
 
 // Http handler for admin authentication
 /*
 	Handler's have minimal documentation
- */
-func AdminAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+*/
+func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Determine if a student is already logged in
 	_, err := sessions.ParseSessions(r, w)
@@ -55,7 +55,7 @@ func AdminAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 		Username string
 		Password string
 		db *sql.db
- */
+*/
 func Auth(Username, Password string, db *sql.DB) (admin.Admin, error) {
 	passwordHash := util.HashString(Password)
 
@@ -85,12 +85,12 @@ func Auth(Username, Password string, db *sql.DB) (admin.Admin, error) {
 
 /*
 	@ UTIL FUNCTIONS ==================================================
- */
+*/
 /*
 	getDetails takes the incoming http request and extracts the details from it
 	@params;
 		r *http.Request
- */
+*/
 func getAuthDetails(r *http.Request) (map[string]string, error) {
 	// Retrieve auth details
 	Username := ""
@@ -121,7 +121,7 @@ func getAuthDetails(r *http.Request) (map[string]string, error) {
 		details map[string]string
 		w http.ResponseWriter
 		r* http.Request
- */
+*/
 func processDetails(details map[string]string, w http.ResponseWriter, r *http.Request) error {
 	// Authenticate
 	currAdmin, err := Auth(details["username"], details["password"], db.DB)
@@ -149,4 +149,4 @@ func processDetails(details map[string]string, w http.ResponseWriter, r *http.Re
 
 /*
 	@ END UTIL FUNCTIONS ==================================================
- */
+*/

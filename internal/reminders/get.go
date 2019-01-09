@@ -1,17 +1,17 @@
 package reminders
 
 import (
-	"time"
-	"mynsb-api/internal/student"
 	"database/sql"
 	"encoding/json"
-	"net/http"
 	"github.com/julienschmidt/httprouter"
-	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/util"
-	"mynsb-api/internal/db"
 	"github.com/metakeule/fmtdate"
+	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
+	"net/http"
+	"time"
 )
 
 func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User) []Reminder {
@@ -25,26 +25,22 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 	var container []Reminder
 
 	for res.Next() {
-		var reminderID int
 		var headers []byte
 		var studentID int
-		var body string
 		var tags []byte
-		var reminderDateTime time.Time
+
+		var reminder Reminder
 
 		// Scan into the containers
-		res.Scan(&reminderID, &studentID, &headers, &body, &tags, &reminderDateTime)
+		res.Scan(&reminder.ReminderId, &studentID, headers, &reminder.Body, &tags, &reminder.ReminderDateTime)
 
 		// Start converting it into the correct types
 		// Headers
-		var headersContainer map[string]interface{}
-		json.Unmarshal(headers, &headersContainer)
-
+		json.Unmarshal(headers, &reminder.Headers)
 		// Tags
-		var tagsContainer []string
-		json.Unmarshal(tags, &tagsContainer)
+		json.Unmarshal(tags, &reminder.Tags)
 		// Push into array
-		container = append(container, Reminder{ReminderId: reminderID, Headers: headersContainer, Body: body, Tags: tagsContainer, ReminderDateTime: reminderDateTime})
+		container = append(container, reminder)
 	}
 
 	res.Close()
@@ -52,7 +48,7 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 }
 
 // Get reminders handler
-func GetRemindersHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	user, err := sessions.ParseSessions(r, w)
 
@@ -67,7 +63,7 @@ func GetRemindersHandler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	defer db.DB.Close()
 
 	if ps.ByName("reqType") == "/Today" {
-		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour * -24), time.Now().Add(time.Hour*24), user))
+		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour*-24), time.Now().Add(time.Hour*24), user))
 		util.Error(200, "OK", string(reminders), "Response", w)
 		return
 	} else {

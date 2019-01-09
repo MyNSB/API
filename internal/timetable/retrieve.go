@@ -1,22 +1,22 @@
 package timetable
 
 import (
-	"mynsb-api/internal/quickerrors"
-	"mynsb-api/internal/util"
 	"encoding/json"
 	"errors"
+	"github.com/buger/jsonparser"
+	"github.com/julienschmidt/httprouter"
 	"io/ioutil"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/util"
 	"net/http"
 	"regexp"
 	"strconv"
-	"github.com/buger/jsonparser"
-	"github.com/julienschmidt/httprouter"
-	"mynsb-api/internal/sessions"
 )
 
 /*
 	Data Holders =============
- */
+*/
 // Class holds a certain class during any day and any given period
 type Class struct {
 	Teacher   string
@@ -30,18 +30,18 @@ type TimeTable []Class
 // Would represent something like: {1 = monday week A}
 /*
 	END Data Holders =============
- */
+*/
 
 /*
 	CORE FUNCTIONS =============================
- */
+*/
 /* GetSubject returns the subject that the student has requested through a given period and a given day
  		@params;
 			StudentID string
 			Period string,
 			Day int,
 			filepath string
- */
+*/
 func GetSubject(StudentID string, Period string, Day int, filepath string) (Class, error) {
 
 	// Create a data holder
@@ -82,10 +82,10 @@ func GetSubject(StudentID string, Period string, Day int, filepath string) (Clas
 }
 
 /* getYear returns the year a specific student is in, it is only really used during authentication when the student details are stored in the database
-		@params;
-			StudentID string
-			filepath string
- */
+@params;
+	StudentID string
+	filepath string
+*/
 func GetYear(StudentID string, filepath string) (string, error) {
 	// Get the timetable for the correct student
 	student, err := RetrieveAll(StudentID, filepath)
@@ -104,11 +104,11 @@ func GetYear(StudentID string, filepath string) (string, error) {
 }
 
 /* RetrieveAll returns the timetable for a particular student
-		@params;
-			StudentID string
-			filepath string
+@params;
+	StudentID string
+	filepath string
 
- */
+*/
 func RetrieveAll(StudentID string, filepath string) (interface{}, error) {
 
 	var data map[string]interface{}
@@ -131,10 +131,10 @@ func RetrieveAll(StudentID string, filepath string) (interface{}, error) {
 }
 
 /* GetWholeDay returns the timetable for a student on a given day
-		@params;
-			day int
-			filepath string
- */
+@params;
+	day int
+	filepath string
+*/
 func GetWholeDay(day int, studentID string, filepath string) ([]Class, error) {
 
 	// timetable type that we start with
@@ -198,15 +198,15 @@ func GetWholeDay(day int, studentID string, filepath string) ([]Class, error) {
 
 /*
 	END CORE FUNCTIONS =============================
- */
+*/
 
 /*
 	UTIL FUNCTIONS =========================
- */
+*/
 /* getMaxKey returns the maximum key in a map
-		@params;
-			map[int]interface{}
- */
+@params;
+	map[int]interface{}
+*/
 func getMaxKey(list map[int]Class) int {
 	max := -9999999
 
@@ -220,9 +220,9 @@ func getMaxKey(list map[int]Class) int {
 }
 
 /* getJson retrieves the json dump as a map of strings and interfaces
-		@params;
-			filepath string
- */
+@params;
+	filepath string
+*/
 func getJson(filepath string) (map[string]interface{}, error) {
 	// Get the jsonpath
 	jsonPath := filepath
@@ -251,7 +251,7 @@ func getJson(filepath string) (map[string]interface{}, error) {
 
 // Http handler for timetable exports
 // Should be moved somewhere else
-func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Get the GOPATH
 	gopath := util.GetGOPATH()
 

@@ -1,20 +1,20 @@
 package week
 
 import (
-	"net/http"
+	"errors"
+	"github.com/Azure/go-ntlmssp"
 	"github.com/julienschmidt/httprouter"
-	"io/ioutil"
-	"time"
-	"mynsb-api/internal/util"
 	"github.com/metakeule/fmtdate"
 	"github.com/tidwall/gjson"
-	"github.com/Azure/go-ntlmssp"
-	"errors"
+	"io/ioutil"
+	"mynsb-api/internal/util"
+	"net/http"
+	"time"
 )
 
 // TODO: Find a Go library that will easily allow me to parse html
 
-func GetWeek(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
+func GetHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 	// Determine the week type when term starts
 	startWeekType, termStart := getStartWeekType()
@@ -22,7 +22,7 @@ func GetWeek(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 	// Calculate difference between two dates in terms of weeks
 	diff := today.Sub(termStart)
-	weeksDif := int((diff.Hours() / 24 ) / 7)
+	weeksDif := int((diff.Hours() / 24) / 7)
 
 	// Determine the week type based on the weeksDiff
 	// Can be a lot more efficient but tbh i am really cbbs
@@ -38,12 +38,12 @@ func GetWeek(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 /*
 	UTIL FUNCTIONS ===========================
- */
+*/
 
 /* getStartWeek returns the type of week that the first week of term was
-		@params;
-			nil
- */
+@params;
+	nil
+*/
 func getStartWeekType() (string, time.Time) {
 	termDates, _ := getTermDates()
 
@@ -70,9 +70,9 @@ func getStartWeekType() (string, time.Time) {
 }
 
 /* getTermDates returns the term dates for that year
-		@params;
-			nil
- */
+@params;
+	nil
+*/
 func getTermDates() (string, error) {
 
 	// Set up client
@@ -105,4 +105,4 @@ func getTermDates() (string, error) {
 
 /*
 	END UTIL FUNCTIONS ===========================
- */
+*/

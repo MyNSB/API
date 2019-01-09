@@ -14,7 +14,7 @@ func (f varField) ReadFrom(buffer []byte) ([]byte, error) {
 	if len(buffer) < int(f.BufferOffset+uint32(f.Len)) {
 		return nil, errors.New("Error reading data, varField extends beyond buffer")
 	}
-	return buffer[f.BufferOffset: f.BufferOffset+uint32(f.Len)], nil
+	return buffer[f.BufferOffset : f.BufferOffset+uint32(f.Len)], nil
 }
 
 func (f varField) ReadStringFrom(buffer []byte, unicode bool) (string, error) {

@@ -1,23 +1,24 @@
-package FourU
+package fouru
 
 import (
-	"mynsb-api/internal/db"
-	"mynsb-api/internal/util"
 	"database/sql"
 	"encoding/json"
-	"github.com/julienschmidt/httprouter"
-	_ "github.com/lib/pq"
-	"github.com/metakeule/fmtdate"
-	"net/http"
-	"mynsb-api/internal/quickerrors"
 	"errors"
+	"github.com/julienschmidt/httprouter"
+	_ "github.com/lib/pq" // Extension of the database/sql package
+	"github.com/metakeule/fmtdate"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/util"
+	"net/http"
 )
 
 // Http handler for four u article requests
 /*
 	Handler's have minimal documentation
 */
-func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// GetIssueHandler deals with a request for a specific 4U Issue
+func GetIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Start up database
 	db.Conn("student")
@@ -55,15 +56,14 @@ func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 }
 
 // Functions to retrieve articles ==================
-
 /*
 	GetAll returns all 4U articles currently in the database, once mynsb grows this will have to shrink to the past year but for now it can stay as the entire db
 	@params;
 		db *sql.db
 */
-func GetAll(db *sql.DB) []Article {
-	article, _ := performRequest(db, "SELECT * FROM four_u")
-	return article
+func GetAll(db *sql.DB) []Issue {
+	issue, _ := performRequest(db, "SELECT * FROM four_u")
+	return issue
 }
 
 /*
@@ -71,18 +71,18 @@ func GetAll(db *sql.DB) []Article {
 	@params;
 		times map[string]string
 		db *sql.db
- */
-func GetBetween(times map[string]string, db *sql.DB) ([]Article, error) {
+*/
+func GetBetween(times map[string]string, db *sql.DB) ([]Issue, error) {
 	// Convert the start and end to actual time values
 	// Convert into dates
 	start, err := fmtdate.Parse("DD-MM-YYYY", times["start"])
 	if err != nil {
-		return []Article{}, errors.New("invalid date format")
+		return []Issue{}, errors.New("invalid date format")
 	}
 
 	end, err := fmtdate.Parse("DD-MM-YYYY", times["end"])
 	if err != nil {
-		return []Article{}, errors.New("invalid date format")
+		return []Issue{}, errors.New("invalid date format")
 	}
 
 	return performRequest(db, "SELECT * FROM four_u WHERE article_publish_date BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP", start, end)
@@ -92,7 +92,7 @@ func GetBetween(times map[string]string, db *sql.DB) ([]Article, error) {
 
 /*
 	@ UTIL FUNCTIONS ==================================================
- */
+*/
 /*
 	determineRequestType determines the type of request for the incoming http.request, true for all false for between, it also returns parameters
 	@params;
@@ -126,10 +126,10 @@ func determineRequestType(r *http.Request) (bool, map[string]string) {
 		db *sql.db
 		query string
 		args ...interface{}
- */
-func performRequest(db *sql.DB, query string, args ...interface{}) ([]Article, error) {
+*/
+func performRequest(db *sql.DB, query string, args ...interface{}) ([]Issue, error) {
 	// Array that will be returned
-	var result []Article
+	var result []Issue
 
 	// Get everything
 	res, err := db.Query(query, args...)
@@ -141,7 +141,7 @@ func performRequest(db *sql.DB, query string, args ...interface{}) ([]Article, e
 
 	// Iterate over result set
 	for res.Next() {
-		article := Article{}
+		article := Issue{}
 		// Scan the rows into the article
 		article.ScanFrom(res)
 
@@ -154,4 +154,4 @@ func performRequest(db *sql.DB, query string, args ...interface{}) ([]Article, e
 
 /*
 	@ END UTIL FUNCTIONS ==================================================
- */
+*/

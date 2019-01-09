@@ -3,13 +3,13 @@ package reminders
 import (
 	"database/sql"
 	"errors"
-	"net/http"
 	"github.com/julienschmidt/httprouter"
-	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/quickerrors"
-	"mynsb-api/internal/util"
-	"strconv"
 	"mynsb-api/internal/db"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/util"
+	"net/http"
+	"strconv"
 )
 
 func deleteEvent(db *sql.DB, reminderId, studentID int) error {
@@ -21,7 +21,7 @@ func deleteEvent(db *sql.DB, reminderId, studentID int) error {
 	return nil
 }
 
-func DeleteReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func DeleteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	if origin := r.Header.Get("Origin"); origin != "" {
 		w.Header().Set("Access-Control-Allow-Origin", origin)

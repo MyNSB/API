@@ -1,22 +1,22 @@
 package events
 
 import (
-	"mynsb-api/internal/db"
-	"mynsb-api/internal/util"
 	"database/sql"
 	_ "database/sql"
 	json2 "encoding/json"
+	"errors"
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
+	"github.com/metakeule/fmtdate"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/util"
 	"net/http"
 	"strconv"
-	"mynsb-api/internal/quickerrors"
-	"github.com/metakeule/fmtdate"
-	"errors"
 )
 
 // HTTP handler for attaining all events
-func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Connect to the database
 	db.Conn("student")
 	// Close the request at the end
@@ -60,7 +60,7 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	@params;
 		event events.Event
 		db *sql.db
- */
+*/
 func Get(event Event, db *sql.DB) (Event, error) {
 	// Extract necessary details
 	eventID := event.EventID
@@ -74,7 +74,7 @@ func Get(event Event, db *sql.DB) (Event, error) {
 		db *sql.db
 		start string
 		end string
- */
+*/
 func GetBetween(db *sql.DB, start string, end string) ([]Event, error) {
 	// Begin converting our strings to actual dates
 	Start, err := fmtdate.Parse("DD-MM-YYYY", start)
@@ -94,7 +94,7 @@ func GetBetween(db *sql.DB, start string, end string) ([]Event, error) {
 	GetAll returns all currently active events
 	@params;
 		db *sql.db
- */
+*/
 func GetAll(db *sql.DB) ([]Event, error) {
 	return performRequest(db, "SELECT * FROM events")
 }
@@ -103,14 +103,14 @@ func GetAll(db *sql.DB) ([]Event, error) {
 
 /*
 	@ UTIL FUNCTIONS START ====================================
- */
+*/
 /*
 	performRequest takes a question and some arguments and returns an array of events corresponding to that query
 	@params;
 		db *sql.db
 		query string
 		args ...interface{}
- */
+*/
 func performRequest(db *sql.DB, query string, args ...interface{}) ([]Event, error) {
 	// Perform 	query
 	rows, err := db.Query(query, args...)
@@ -143,7 +143,7 @@ func performRequest(db *sql.DB, query string, args ...interface{}) ([]Event, err
 	determineRequestType determines the request type of the incoming request and returns all parameters related to that request
 	@params;
 		r *http.Request
- */
+*/
 func determineRequestType(r *http.Request) (string, map[string]string) {
 	typeReq := ""
 	if r.URL.Query().Get("Event_ID") == "" {
@@ -165,4 +165,4 @@ func determineRequestType(r *http.Request) (string, map[string]string) {
 
 /*
 	@ UTIL FUNCTIONS END ====================================
- */
+*/
