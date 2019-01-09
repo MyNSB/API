@@ -1,12 +1,12 @@
 package belltimes
 
 import (
-	"io/ioutil"
 	"encoding/json"
+	"io/ioutil"
 	"mynsb-api/internal/util"
 )
 
-var Times = map[string]map[string]string{}
+var Times = make(map[string]map[string]string)
 
 func Init() {
 	// Get the GOPATH

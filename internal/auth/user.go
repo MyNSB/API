@@ -1,25 +1,25 @@
 package auth
 
 import (
-	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/util"
+	"database/sql"
 	"errors"
 	"github.com/Azure/go-ntlmssp"
 	_ "github.com/SermoDigital/jose"
 	"github.com/julienschmidt/httprouter"
-	"net/http"
-	_ "regexp"
-	"database/sql"
 	"io/ioutil"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/jwt"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/timetable"
+	"mynsb-api/internal/util"
+	"net/http"
+	"regexp"
+	_ "regexp"
+	"strconv"
 	"strings"
 	"unicode"
-	"regexp"
-	"mynsb-api/internal/timetable"
-	"mynsb-api/internal/student"
-	"mynsb-api/internal/db"
-	"mynsb-api/internal/quickerrors"
-	"strconv"
-	"mynsb-api/internal/jwt"
 )
 
 // TODO: Refactor spaghetti code
@@ -87,7 +87,7 @@ func Authenticate(StudentID string, Password string) (int, string, error) {
 }
 
 // Http handler for authentication
-func UserAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	_, err := sessions.ParseSessions(r, w)
 	if err == nil {
@@ -145,8 +145,8 @@ func UserAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 
 }
 
-// Logout function
-func Logout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// LogoutHandler function
+func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	err := sessions.Logout(w, r)
 	if err != nil {

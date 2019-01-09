@@ -1,20 +1,20 @@
 package events
 
 import (
-	"mynsb-api/internal/db"
-	"mynsb-api/internal/student"
-	"mynsb-api/internal/util"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/metakeule/fmtdate"
 	"io"
-	"net/http"
-	"time"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/filesint"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/filesint"
-	"fmt"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
+	"net/http"
+	"time"
 )
 
 /**
@@ -51,7 +51,7 @@ func Create(user student.User, event Event, db *sql.DB) error {
 
 		// Insert the event at the absolute end
 		db.Exec("INSERT INTO events(event_name, event_start, event_end, event_location, event_organiser, "+
-			"event_short_desc, "+ "event_long_desc, event_picture_url) "+
+			"event_short_desc, "+"event_long_desc, event_picture_url) "+
 			"VALUES ($1, $2, $3, $4, $5 ,$6, $7, $8)", event.EventName, event.EventStart, event.EventEnd, event.EventLocation,
 			event.EventOrganiser, event.EventShortDesc, event.EventLongDesc, event.EventPictureURL)
 
@@ -74,12 +74,12 @@ func validateDateTime(dateStart, format string) (bool, time.Time) {
 
 /*
 	UTIL FUNCTIONS ============================
- */
+*/
 /* getIncomingEvent takes a request and returns the incoming event for that request
-		@params;
-			r *http.Request
-			student student.student
- */
+@params;
+	r *http.Request
+	student student.student
+*/
 func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 	eventName := r.FormValue("Event_Name")
 	eventEnd := r.FormValue("Event_End")
@@ -143,7 +143,7 @@ func parseDatesInto(requestedEvent *Event, eventStartStr string, eventEndStr str
 
 /*
 	END UTIL FUNCTIONS ============================
- */
+*/
 
 // Http handler for authentication
 /**
@@ -158,7 +158,7 @@ func parseDatesInto(requestedEvent *Event, eventStartStr string, eventEndStr str
 	@param event_time_start
 	@param event_time_end
 **/
-func CreateEventHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Connect to database
 	db.Conn("admin")

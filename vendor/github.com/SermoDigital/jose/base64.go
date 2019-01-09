@@ -38,7 +38,7 @@ func EncodeEscape(b []byte) []byte {
 // cases where it's not.
 func DecodeEscaped(b []byte) ([]byte, error) {
 	if len(b) > 1 && b[0] == '"' && b[len(b)-1] == '"' {
-		b = b[1: len(b)-1]
+		b = b[1 : len(b)-1]
 	}
 	return Base64Decode(b)
 }

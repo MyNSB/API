@@ -2,11 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
-	"strings"
-	"errors"
 	"mynsb-api/internal/filesint"
+	"strings"
 )
 
 // Whole thing is pre much just an abstraction
@@ -48,8 +48,8 @@ func (connection *Connection) Connect() error {
 }
 
 /*
- 	UTILITY FUNCTIONS
- */
+	UTILITY FUNCTIONS
+*/
 
 /**
 	Func getConnections:

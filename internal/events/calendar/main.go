@@ -1,17 +1,17 @@
 package calendar
 
 import (
-	"mynsb-api/internal/util"
 	"errors"
 	"fmt"
 	"github.com/Azure/go-ntlmssp"
 	"github.com/julienschmidt/httprouter"
 	"github.com/metakeule/fmtdate"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
-	"net/http"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"github.com/tidwall/gjson"
+	"mynsb-api/internal/util"
+	"net/http"
 )
 
 // Function to get all data from the
@@ -78,7 +78,7 @@ func sendRequest(url string) (string, error) {
 }
 
 // Http handler for calendar thingy ma bop
-func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Get the currently logged in student
 

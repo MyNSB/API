@@ -3,12 +3,12 @@ package sessions
 import (
 	"errors"
 	"github.com/gorilla/sessions"
-	"net/http"
-	"mynsb-api/internal/student"
-	"mynsb-api/internal/jwt"
-	"mynsb-api/internal/util"
-	"time"
 	"mynsb-api/internal/filesint"
+	"mynsb-api/internal/jwt"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
+	"net/http"
+	"time"
 )
 
 // Attain the cookie store password from the sensitive info

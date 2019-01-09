@@ -3,17 +3,17 @@ package main
 import (
 	Post4U "4U/Create"
 	Get4U "4U/Get"
+	"Events/Create"
+	"QuickErrors"
+	SportsLocationsRemove "SportLocations/Update/Remove"
+	"Util"
 	Admin "admin/auth"
 	BellTimesGet "belltimes/Get"
-	"Events/Create"
-	User "student/auth"
-	"Util"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	SportsLocationsRemove "SportLocations/Update/Remove"
-	"QuickErrors"
+	User "student/auth"
 )
 
 // 404 Handler

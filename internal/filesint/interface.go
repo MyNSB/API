@@ -3,11 +3,11 @@ package filesint
 // Interface package for core files within application
 
 import (
-	"os"
-	"mynsb-api/internal/util"
-	"errors"
 	"bytes"
+	"errors"
 	"io"
+	"mynsb-api/internal/util"
+	"os"
 	"regexp"
 )
 

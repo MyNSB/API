@@ -1,9 +1,9 @@
 package admin
 
 import (
-	"mynsb-api/internal/student"
 	"database/sql"
 	"encoding/json"
+	"mynsb-api/internal/student"
 )
 
 type Admin struct {
@@ -28,8 +28,6 @@ func (admin *Admin) ScanFrom(rows *sql.Rows) {
 	rows.Scan(&adminPermissions)
 
 	// Unmarshal the perms
-	var perms []string
-	json.Unmarshal([]byte(adminPermissions), &perms)
+	json.Unmarshal([]byte(adminPermissions), &admin.Permissions)
 
-	admin.Permissions = perms
 }

@@ -1,14 +1,14 @@
 package admin
 
 import (
-	"net/http"
-	"github.com/julienschmidt/httprouter"
-	"mynsb-api/internal/util"
-	"mynsb-api/internal/quickerrors"
 	json2 "encoding/json"
+	"github.com/julienschmidt/httprouter"
 	"mynsb-api/internal/db"
+	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
 	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
+	"net/http"
 )
 
 type details struct {
@@ -19,8 +19,8 @@ type details struct {
 // Retrieves the details for an incoming student
 /*
 	http handlers need minimal documentation
- */
-func GetDetailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+*/
+func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Determine if the student is allowed here
 	allowed, user := sessions.UserIsAllowed(r, w, "admin")
@@ -40,12 +40,12 @@ func GetDetailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 
 /*
 	@ UTIL FUNCTIONS ==================================================
- */
+*/
 /*
 	getDetails takes a student and returns the details for that student
 	@params;
 		student student.student
- */
+*/
 func getDetails(user student.User) string {
 	rows, _ := db.DB.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
 	defer rows.Close()
@@ -65,4 +65,4 @@ func getDetails(user student.User) string {
 
 /*
 	@ END UTIL FUNCTIONS ==================================================
- */
+*/

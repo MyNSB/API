@@ -3,7 +3,7 @@ package ntlmssp
 type avID uint16
 
 const (
-	avIDMsvAvEOL             avID = iota
+	avIDMsvAvEOL avID = iota
 	avIDMsvAvNbComputerName
 	avIDMsvAvNbDomainName
 	avIDMsvAvDNSComputerName

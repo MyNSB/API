@@ -1,38 +1,39 @@
-package FourU
+package fouru
 
 import (
+	"database/sql"
 	"mime/multipart"
 	"time"
-	"database/sql"
 )
 
+type Issue struct {
+	ID            int64
+	Name          string
+	Desc          string
+	PublishDate   time.Time
+	Picture       multipart.File
+	PictureHeader *multipart.FileHeader
+	ImageUrl      string
+	Link          string
+	TypePost      string
+}
+
+// Function merely takes a row and scans it into an article, minimal documentation required
+func (article *Issue) ScanFrom(rows *sql.Rows) {
+	rows.Scan(
+		article.ID,
+		&article.Name,
+		&article.Desc,
+		&article.PublishDate,
+		&article.ImageUrl,
+		&article.Link,
+		&article.TypePost)
+}
+
 type Article struct {
-	ArticleID          int64
-	ArticleName        string
-	ArticleDesc        string
-	ArticlePublishDate time.Time
-	Picture            multipart.File
-	PictureHeader      *multipart.FileHeader
-	ArticleImageUrl    string
-	Link               string
-	TypePost           string
-}
-
-// Parses an SQL query result into the current Article object
-func (article *Article) ScanFrom(rows *sql.Rows) {
-	rows.Scan(&article.ArticleID,
-	          &article.ArticleName,
-	          &article.ArticleDesc,
-	          &article.ArticlePublishDate,
-	          &article.ArticleImageUrl,
-	          &article.Link,
-	          &article.TypePost)
-}
-
-type FourUArticle struct {
-	ArticleID       int64
-	ArticleParentID int64
-	ArticlePage     int64
-	ArticleName     string
-	ArticleDesc     string
+	ID       int64
+	ParentID int64
+	Page     int64
+	Name     string
+	Desc     string
 }

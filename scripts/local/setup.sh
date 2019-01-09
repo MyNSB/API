@@ -11,8 +11,8 @@ trap close EXIT
 CYAN='\033[0;36m'
 RED='\033[0;38m'
 NC='\033[0m'
-USERDIR = $(eval echo ~${USER})
-API_DIR = $(find ${USERDIR} "mynsb-api")
+USERDIR=$(eval echo ~${USER})
+API_DIR=$(find ${USERDIR} "mynsb-api")
 
 # -------- Downloads -----------
 # PostgreSQL
@@ -31,7 +31,7 @@ fi
 # Time to install the postgres packages
 # Determine if they are there
 # Pretty hacky for checking if an extension exists
-DATA_DUMP = $(sudo -u postgres -H -- psql -c "select count(*) from pg_available_extensions where name='pg_cron';")
+DATA_DUMP=$(sudo -u postgres -H -- psql -c "select count(*) from pg_available_extensions where name='pg_cron';")
 if echo "${DATA_DUMP}" | grep '[0]' >/dev/null; then
     # pg_cron doesn't exist
     echo -e "${CYAN}Installing pg_cron...${NC}"

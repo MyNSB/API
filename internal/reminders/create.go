@@ -1,19 +1,19 @@
 package reminders
 
 import (
-	"mynsb-api/internal/sessions"
-	"net/http"
-	"github.com/julienschmidt/httprouter"
-	"strconv"
-	"mynsb-api/internal/util"
-	"mynsb-api/internal/student"
 	"database/sql"
-	"mynsb-api/internal/db"
 	"encoding/json"
-	"time"
-	"github.com/metakeule/fmtdate"
-	"mynsb-api/internal/quickerrors"
 	"errors"
+	"github.com/julienschmidt/httprouter"
+	"github.com/metakeule/fmtdate"
+	"mynsb-api/internal/db"
+	"mynsb-api/internal/quickerrors"
+	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/student"
+	"mynsb-api/internal/util"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
@@ -34,7 +34,7 @@ func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
 }
 
 // Create reminders handler
-func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, _ := sessions.ParseSessions(r, w)
 
