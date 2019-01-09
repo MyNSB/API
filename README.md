@@ -1,4 +1,5 @@
-# <img src="https://github.com/MyNSB/Android/blob/master/app/src/main/res/mipmap-xxxhdpi/mynsb_logo.png" width="200"/> &nbsp; MyNSB API
+<img src="https://github.com/MyNSB/Android/blob/master/app/src/main/res/mipmap-xxxhdpi/mynsb_logo.png" width="200"/> &nbsp; 
+# &nbsp;&nbsp; MyNSB API
 
 [![Travis](https://img.shields.io/travis/MyNSB/API.svg?style=flat-square)](https://travis-ci.org/MyNSB/API)
 [![Code Climate](https://img.shields.io/codeclimate/maintainability/MyNSB/API.svg?style=flat-square)](https://codeclimate.com/github/MyNSB/API)
