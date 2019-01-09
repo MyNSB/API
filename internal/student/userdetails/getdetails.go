@@ -15,10 +15,10 @@ import (
 
 // Don't need this but kinda ceebs fixing it so please deal with it later
 type details struct {
-	StudentID 	uint64
-	Fname 		string
-	Lname 		string
-	Year  		uint8
+	StudentID uint64
+	Fname     string
+	Lname     string
+	Year      uint8
 }
 
 func getDetails(db *sql.DB, user student.User) string {
@@ -27,7 +27,6 @@ func getDetails(db *sql.DB, user student.User) string {
 
 	rows, _ := db.Query("SELECT * FROM students WHERE student_id = $1", studentID)
 
-
 	details := details{}
 
 	// Iterate over it
@@ -35,7 +34,7 @@ func getDetails(db *sql.DB, user student.User) string {
 		var StudentID uint64
 		var Fname string
 		var Lname string
-		var Year  uint8
+		var Year uint8
 
 		rows.Scan(&StudentID, &Fname, &Lname, &Year)
 
@@ -45,17 +44,13 @@ func getDetails(db *sql.DB, user student.User) string {
 		details.Fname = Fname
 	}
 
-
 	// Marshall the response
 	resp, _ := json.Marshal(details)
 
 	return string(resp)
 }
 
-
-
-func GetDetailsHandler(w http.ResponseWriter, r* http.Request, _ httprouter.Params) {
-
+func GetDetailsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, err := sessions.ParseSessions(r, w)
 
@@ -68,7 +63,6 @@ func GetDetailsHandler(w http.ResponseWriter, r* http.Request, _ httprouter.Para
 		quickerrors.NotLoggedIn(w)
 		return
 	}
-
 
 	util.Error(200, "OK", getDetails(db.DB, user), "Response", w)
 	return

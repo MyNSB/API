@@ -276,7 +276,7 @@ func searchKeys(data []byte, keys ...string) int {
 		case '[':
 			// If we want to get array element by index
 			if keyLevel == level && keys[level][0] == '[' {
-				aIdx, err := strconv.Atoi(keys[level][1 : len(keys[level])-1])
+				aIdx, err := strconv.Atoi(keys[level][1: len(keys[level])-1])
 				if err != nil {
 					return -1
 				}
@@ -290,7 +290,7 @@ func searchKeys(data []byte, keys ...string) int {
 						valueOffset = offset
 						if dataType == String {
 							valueOffset = valueOffset - 2
-							valueFound = data[curI+valueOffset : curI+valueOffset+len(value)+2]
+							valueFound = data[curI+valueOffset: curI+valueOffset+len(value)+2]
 						}
 					}
 					curIdx += 1
@@ -465,7 +465,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					continue
 				}
 
-				aIdx, _ := strconv.Atoi(p[level][1 : len(p[level])-1])
+				aIdx, _ := strconv.Atoi(p[level][1: len(p[level])-1])
 				arrIdxFlags |= bitwiseFlags[aIdx+1]
 				pIdxFlags |= bitwiseFlags[pi+1]
 			}
@@ -478,7 +478,7 @@ func EachKey(data []byte, cb func(int, []byte, ValueType, error), paths ...[]str
 					if arrIdxFlags&bitwiseFlags[curIdx+1] != 0 {
 						for pi, p := range paths {
 							if pIdxFlags&bitwiseFlags[pi+1] != 0 {
-								aIdx, _ := strconv.Atoi(p[level-1][1 : len(p[level-1])-1])
+								aIdx, _ := strconv.Atoi(p[level-1][1: len(p[level-1])-1])
 
 								if curIdx == aIdx {
 									of := searchKeys(value, p[level:]...)
@@ -774,7 +774,7 @@ func getType(data []byte, offset int) ([]byte, ValueType, int, error) {
 			return nil, dataType, offset, MalformedValueError
 		}
 
-		value := data[offset : endOffset+end]
+		value := data[offset: endOffset+end]
 
 		switch data[offset] {
 		case 't', 'f': // true or false
@@ -838,7 +838,7 @@ func internalGet(data []byte, keys ...string) (value []byte, dataType ValueType,
 
 	// Strip quotes from string values
 	if dataType == String {
-		value = value[1 : len(value)-1]
+		value = value[1: len(value)-1]
 	}
 
 	return value, dataType, offset, endOffset, nil

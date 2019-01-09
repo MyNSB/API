@@ -12,11 +12,9 @@ func dropErr(status int, statusMessage string, body string, title string, w http
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":"%s"}}`, status, statusMessage, title, body)))
 }
 
-
-func InteralServerError(w http.ResponseWriter) {
+func InternalServerError(w http.ResponseWriter) {
 	dropErr(500, "Internal Server Error", "Something went wrong", "Something went wrong...", w)
 }
-
 
 func AlreadyLoggedIn(w http.ResponseWriter) {
 	dropErr(400, "Hmp??", "Already Logged In", "Something went wrong...", w)
@@ -30,10 +28,9 @@ func MalformedRequest(w http.ResponseWriter, error string) {
 	dropErr(400, "Malformed Request", error, "Invalid Request", w)
 }
 
-func NotEnoughPrivledges(w http.ResponseWriter) {
+func NotEnoughPrivileges(w http.ResponseWriter) {
 	dropErr(403, "Forbidden", "student does not have sufficient privileges or is not logged in", "Invalid Request", w)
 }
-
 
 func OK(w http.ResponseWriter) {
 	dropErr(200, "OK", "Success!", "Success!", w)

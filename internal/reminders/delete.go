@@ -21,8 +21,6 @@ func deleteEvent(db *sql.DB, reminderId, studentID int) error {
 	return nil
 }
 
-
-
 func DeleteReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	if origin := r.Header.Get("Origin"); origin != "" {
@@ -34,14 +32,12 @@ func DeleteReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 
 	r.ParseForm()
 
-
 	db.Conn("admin")
 	defer db.DB.Close()
 
-
 	user, err := sessions.ParseSessions(r, w)
 	if err != nil || !util.ExistsString(user.Permissions, "student") {
-		quickerrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 

@@ -12,7 +12,7 @@ type Admin struct {
 	Permissions []string
 }
 
-func AdminToUser(admin Admin) student.User {
+func ToUser(admin Admin) student.User {
 	User := student.User{
 		Name:        admin.Name,
 		Password:    admin.Password,
@@ -21,7 +21,6 @@ func AdminToUser(admin Admin) student.User {
 
 	return User
 }
-
 
 func (admin *Admin) ScanFrom(rows *sql.Rows) {
 	// Get the permissions

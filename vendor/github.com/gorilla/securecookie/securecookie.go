@@ -58,7 +58,7 @@ type Error interface {
 type errorType int
 
 const (
-	usageError = errorType(1 << iota)
+	usageError    = errorType(1 << iota)
 	decodeError
 	internalError
 )

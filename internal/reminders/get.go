@@ -32,7 +32,6 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 		var tags []byte
 		var reminderDateTime time.Time
 
-
 		// Scan into the containers
 		res.Scan(&reminderID, &studentID, &headers, &body, &tags, &reminderDateTime)
 
@@ -48,16 +47,12 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 		container = append(container, Reminder{ReminderId: reminderID, Headers: headersContainer, Body: body, Tags: tagsContainer, ReminderDateTime: reminderDateTime})
 	}
 
-
 	res.Close()
 	return container
 }
 
-
-
 // Get reminders handler
 func GetRemindersHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
 
 	user, err := sessions.ParseSessions(r, w)
 
@@ -71,10 +66,8 @@ func GetRemindersHandler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	// Close that database at the end
 	defer db.DB.Close()
 
-
-
 	if ps.ByName("reqType") == "/Today" {
-		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour * -24), time.Now().Add(time.Hour * 24), user))
+		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour * -24), time.Now().Add(time.Hour*24), user))
 		util.Error(200, "OK", string(reminders), "Response", w)
 		return
 	} else {

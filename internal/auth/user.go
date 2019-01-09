@@ -22,13 +22,12 @@ import (
 	"mynsb-api/internal/jwt"
 )
 
-
 // TODO: Refactor spaghetti code
 
 // Function that parses the raw html string returned by the school and returns the school details
-func getStudentDetails(rawHTML string) (string, string){
+func getStudentDetails(rawHTML string) (string, string) {
 	var re = regexp.MustCompile(`<divclass="page-header"><h1>(.*)<br><small>Homepage</small></h1></div>`)
-	out := strings.TrimLeft(strings.TrimRight(re.FindString(rawHTML),`<br><small>Homepage</small></h1></div>`),`<divclass="page-header"><h1>`)
+	out := strings.TrimLeft(strings.TrimRight(re.FindString(rawHTML), `<br><small>Homepage</small></h1></div>`), `<divclass="page-header"><h1>`)
 	// Match the first names, last names e.t.c...
 	var firstNameS = regexp.MustCompile(`[A-Z][a-z]+`)
 	var lastName = regexp.MustCompile(`[A-Z]+$`)
@@ -36,20 +35,17 @@ func getStudentDetails(rawHTML string) (string, string){
 	return firstNameS.FindString(out), lastName.FindString(out)
 }
 
-
-
-func pushAndUpdateDB(db *sql.DB, studentID string, fname string, lname string, studentYear string) {
+func pushAndUpdateDB(db *sql.DB, studentID string, fName string, lName string, studentYear string) {
 
 	// Convert student id to integer
 	studentIDInt, _ := strconv.Atoi(studentID)
 	studentYearInt, _ := strconv.Atoi(studentYear)
 
-	_, err := db.Query("SELECT insert_student($1, $2, $3, $4)", studentIDInt, fname, lname, studentYearInt)
+	_, err := db.Query("SELECT insert_student($1, $2, $3, $4)", studentIDInt, fName, lName, studentYearInt)
 	if err != nil {
 		panic(err)
 	}
 }
-
 
 /**
 	Func Authenticate:
@@ -83,8 +79,6 @@ func Authenticate(StudentID string, Password string) (int, string, error) {
 		return r
 	}, string(body))
 
-
-
 	if err != nil {
 		return 0, "", errors.New("error authenticating")
 	}
@@ -92,23 +86,14 @@ func Authenticate(StudentID string, Password string) (int, string, error) {
 	return res.StatusCode, resp, nil
 }
 
-
-
-
-
-
-
-
 // Http handler for authentication
 func UserAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 
 	_, err := sessions.ParseSessions(r, w)
 	if err == nil {
 		quickerrors.AlreadyLoggedIn(w)
 		return
 	}
-
 
 	db.Conn("admin")
 	defer db.DB.Close()
@@ -130,11 +115,11 @@ func UserAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	StatusCode, rawHTML, _ := Authenticate(StudentId, Password)
 
 	if StatusCode == 200 {
-		// Generate the jwt
-		jwt, err := jwt.GenJWT(userToMap(student.User{Name: StudentId, Password: Password, Permissions: []string{"student"}}))
+		// Generate the jwtToken
+		jwtToken, err := jwt.GenJWT(userToMap(student.User{Name: StudentId, Password: Password, Permissions: []string{"student"}}))
 
 		// Create the session
-		sessions.GenerateSession(w, r ,jwt)
+		sessions.GenerateSession(w, r, jwtToken)
 
 		// DATABASE STUFF ===============
 		// Get the spicy details from the details function
@@ -145,25 +130,23 @@ func UserAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		pushAndUpdateDB(db.DB, StudentId, fnameS, lastName, year)
 		// END DATABASE ================
 
-
 		// Determine that no error occurred using compound if statements
 		if err != nil {
-			quickerrors.InteralServerError(w)
+			quickerrors.InternalServerError(w)
 			return
 		}
 
-		util.SolidError(200, "OK", "Logged In as: " + StudentId, "Success!", w)
+		util.SolidError(200, "OK", "Logged In as: "+StudentId, "Success!", w)
 		return
 
 	}
 
-	util.SolidError(401, "Unauthorized", "userdetails provided are invalid", "Unauthorized", w)
+	util.SolidError(401, "Unauthorized", "user details provided are invalid", "Unauthorized", w)
 
 }
 
 // Logout function
 func Logout(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 
 	err := sessions.Logout(w, r)
 	if err != nil {

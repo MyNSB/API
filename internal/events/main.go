@@ -20,27 +20,26 @@ type Event struct {
 	EventPictureURL string
 }
 
-
 func (event *Event) ScanFrom(rows *sql.Rows) {
-	var eventId 			int64
-	var eventName 			string
-	var eventStart 			time.Time
-	var eventEnd 			time.Time
-	var eventLocation 		string
-	var eventOrganiser 		string
-	var eventShortDesc 		string
-	var eventLongDesc 		string
-	var eventPictureUrl 	string
+	var eventId int64
+	var eventName string
+	var eventStart time.Time
+	var eventEnd time.Time
+	var eventLocation string
+	var eventOrganiser string
+	var eventShortDesc string
+	var eventLongDesc string
+	var eventPictureUrl string
 
 	rows.Scan(&eventId, &eventName, &eventStart, &eventEnd, &eventLocation, &eventOrganiser, &eventShortDesc, &eventLongDesc, &eventPictureUrl)
 
-	event.EventID 			= eventId
-	event.EventName 		= eventName
-	event.EventStart 		= eventStart
-	event.EventEnd 			= eventEnd
-	event.EventLocation 	= eventLocation
-	event.EventOrganiser 	= eventOrganiser
-	event.EventShortDesc	= eventShortDesc
-	event.EventLongDesc		= eventLongDesc
-	event.EventPictureURL	= eventPictureUrl
+	event.EventID = eventId
+	event.EventName = eventName
+	event.EventStart = eventStart
+	event.EventEnd = eventEnd
+	event.EventLocation = eventLocation
+	event.EventOrganiser = eventOrganiser
+	event.EventShortDesc = eventShortDesc
+	event.EventLongDesc = eventLongDesc
+	event.EventPictureURL = eventPictureUrl
 }

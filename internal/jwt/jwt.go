@@ -1,40 +1,27 @@
 package jwt
 
 import (
-	"io/ioutil"
 	"time"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
-	"os"
-	"go/build"
+	"mynsb-api/internal/filesint"
 )
 
 // NOTE ========== THE jwt PACKAGE ONLY TAKES AND DEALS IN MAPS AS IT IS MEANT TO BE INDEPENDENT OF THE OTHER PACKAGES
 
+// Attain the directory of the sensitive data
+
 /**
 	Func GetJWT:
-		@param student student
-		@param keypath string
+		@param user map[string]interface{}
 
 		returns string which is the jwt and returns an error if something wrong happened
  **/
 func GenJWT(user map[string]interface{}) (string, error) {
-
-	// Get the GOPATH
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
-	}
-
-	sensitiveDir := gopath + "/src/mynsb-api/sensitive"
-
-
-
-	// Attain student data from the student paramater
+	// Attain student data from the student parameter
 	var username = user["student"]
 	var password = user["Password"]
 	var permissions = user["Permissions"]
-
 
 	// Generate a token
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
@@ -47,7 +34,7 @@ func GenJWT(user map[string]interface{}) (string, error) {
 	claims["Expires"] = time.Now().Add(time.Hour * 24 * 30)
 
 	// Read key
-	privKey, err := ioutil.ReadFile(sensitiveDir + "/keys/priv.txt")
+	privKey, err := filesint.DataDump("sensitive", "/keys/priv.txt")
 	if err != nil {
 		return "", errors.New("error generating jwt")
 	}
@@ -62,10 +49,6 @@ func GenJWT(user map[string]interface{}) (string, error) {
 	return signedToken, nil
 }
 
-
-
-
-
 /**
 	Func ReadJWT:
 		@param jwt string
@@ -73,17 +56,6 @@ func GenJWT(user map[string]interface{}) (string, error) {
 		returns student data based on the current jwt
  **/
 func ReadJWT(token string) (map[string]interface{}, error) {
-
-	// Get the GOPATH
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
-	}
-
-	sensitiveDir := gopath + "/src/mynsb-api/sensitive"
-
-
-
 	// Decode the token
 
 	var permissions []string
@@ -91,7 +63,7 @@ func ReadJWT(token string) (map[string]interface{}, error) {
 	// Decode token
 	tokenDec, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
 		// Read the token from the path provided
-		key, err := ioutil.ReadFile(sensitiveDir + "/keys/priv.txt")
+		key, err := filesint.DataDump("sensitive", "/keys/priv.txt")
 		if err != nil {
 			return nil, errors.New("error parsing jwt")
 		}
@@ -104,7 +76,6 @@ func ReadJWT(token string) (map[string]interface{}, error) {
 	if err != nil || !tokenDec.Valid {
 		return make(map[string]interface{}), errors.New("invalid jwt")
 	}
-
 
 	// Get claims
 	claims := tokenDec.Claims.(jwt.MapClaims)

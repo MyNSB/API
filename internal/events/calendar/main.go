@@ -14,17 +14,12 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-
-
 // Function to get all data from the
 func GetAll() (string, int, error) {
 	content, _ := sendRequest("https://web3.northsydbo-h.schools.nsw.edu.au/classery/public/api/export/calendar")
 	// Return it
 	return string(content), 0, nil
 }
-
-
-
 
 func GetBetween(startDate, endDate string) (string, int, error) {
 	// Create times
@@ -40,23 +35,18 @@ func GetBetween(startDate, endDate string) (string, int, error) {
 		return "", 0, errors.New("invalid Date format, must fit format: DD-MM-YYYY")
 	}
 
-
 	// This is the format that the school's API accepts
 	apiFormat := "YYYY-MM-DD"
 
 	// Send the http request
-	url := fmt.Sprintf("http://web3.northsydbo-h.schools.nsw.edu.au/classery/public/api/export/calendar?start=%s&end=%s", fmtdate.Format(apiFormat, start), fmtdate.Format(apiFormat,end))
+	url := fmt.Sprintf("http://web3.northsydbo-h.schools.nsw.edu.au/classery/public/api/export/calendar?start=%s&end=%s", fmtdate.Format(apiFormat, start), fmtdate.Format(apiFormat, end))
 	bytes, err := sendRequest(url)
-
 
 	return string(bytes), 200, nil
 
 }
 
-
-
-
-// Function send a reuqest with the details provided to us by the school
+// Function send a request with the details provided to us by the school
 func sendRequest(url string) (string, error) {
 
 	// Set up client
@@ -77,21 +67,15 @@ func sendRequest(url string) (string, error) {
 		return "", errors.New("something went wrong when trying to retrieve calendar")
 	}
 
-	// Attain the resutls
+	// Attain the results
 	defer res.Body.Close()
 	bytes, _ := ioutil.ReadAll(res.Body)
-
 
 	// Parse data as json
 	value := gjson.Get(string(bytes), "events")
 
-
 	return value.String(), nil
 }
-
-
-
-
 
 // Http handler for calendar thingy ma bop
 func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -100,10 +84,9 @@ func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, err := sessions.ParseSessions(r, w)
 	if err != nil || !util.ExistsString(user.Permissions, "student") {
-		quickerrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
-
 
 	// Get the get variables from the query
 	dateStart := r.URL.Query().Get("Start")
@@ -114,7 +97,7 @@ func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		resp, status, err := GetBetween(dateStart, dateEnd)
 
 		if err != nil && status == 0 {
-			quickerrors.InteralServerError(w)
+			quickerrors.InternalServerError(w)
 			return
 		} else if status != 200 {
 			util.Error(status, "Something went horribly wrong", "This could be because a failed attempt to authenticate with the school servers, please try again later", "Something went horribly wrong", w)
@@ -128,7 +111,7 @@ func GetCalendar(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get everything first
 		resp, status, err := GetAll()
 		if err != nil {
-			quickerrors.InteralServerError(w)
+			quickerrors.InternalServerError(w)
 		} else {
 			util.Error(status, "Here: ", resp, "Here: ", w)
 		}

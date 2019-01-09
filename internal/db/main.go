@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"io/ioutil"
 	"strings"
-	"os"
 	"errors"
-	"go/build"
+	"mynsb-api/internal/filesint"
 )
 
 // Whole thing is pre much just an abstraction
@@ -36,7 +34,7 @@ var DB *sql.DB
 func (connection *Connection) Connect() error {
 	var err error
 	// Connect to the database
-	DB, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s student=%s password=%s dbname=%s sslmode=disable",
+	DB, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		connection.Host, connection.Port, connection.User, connection.Password, connection.DatabaseName))
 	if err != nil {
 		return err
@@ -49,20 +47,16 @@ func (connection *Connection) Connect() error {
 	return nil
 }
 
-
-
-
 /*
  	UTILITY FUNCTIONS
  */
-
 
 /**
 	Func getConnections:
 		return db.Connection
 **/
-func getConnection(detailsPath string) (Connection, error) {
-	ConnectionDetails, err := ioutil.ReadFile(detailsPath)
+func getConnection() (Connection, error) {
+	ConnectionDetails, err := filesint.DataDump("database", "/details.txt")
 	if err != nil {
 		return Connection{}, err
 	}
@@ -80,29 +74,18 @@ func getConnection(detailsPath string) (Connection, error) {
 	}, nil
 }
 
-
 // Conn function for connection to database
 // sensitiveLoc should look something like
 func Conn(user string) error {
-	// Get the GOPATH
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
-	}
-
-	dbDir := gopath + "/src/mynsb-api/database"
-	sensitiveDir := gopath + "/src/mynsb-api/sensitive"
-
-
 	// Connect to database as student
-	connection, err := getConnection(dbDir + "/details.txt")
+	connection, err := getConnection()
 	if err != nil {
 		panic(err)
 	}
 	// If err != nil why??
 	connection.User = user
 	// Attain the student password
-	if pwd, err := ioutil.ReadFile(sensitiveDir + "/student pass/"+user+".txt"); err == nil {
+	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/student pass/%s.txt", user)); err == nil {
 		connection.Password = string(pwd)
 	} else {
 		return errors.New("could not authenticate")

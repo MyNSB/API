@@ -5,10 +5,7 @@ import (
 	Get4U "4U/Get"
 	Admin "admin/auth"
 	BellTimesGet "belltimes/Get"
-	"Events/Calendar/Get"
 	"Events/Create"
-	"Events/Get"
-	"Timetable/Retrieve"
 	User "student/auth"
 	"Util"
 	"encoding/json"
@@ -19,27 +16,18 @@ import (
 	"QuickErrors"
 )
 
-
-
-
 // 404 Handler
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Header().Set("Content-Type", "Application/json")
-	w.Write([]byte(`{"Status":{"Code": 404, "Status Message":"404 Not Found"},"Message": {"Title":"An Error Occured", "Body":"The file you requested could not be found on this server."}}`))
+	w.Write([]byte(`{"Status":{"Code": 404, "Status Message":"404 Not Found"},"Message": {"Title":"An Error Occurred", "Body":"The file you requested could not be found on this server."}}`))
 }
-
-
-
 
 // Index handler
 func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "Application/json")
 	w.Write([]byte(`{"Status":{"Code": 200, "Status Message":"200 OK"},"Message": {"Title":"Hello There!", "Body":"Welcome to the MyNSB API."}}`))
 }
-
-
-
 
 // Http handler for timetable exports
 // Should be moved somewhere else
@@ -81,7 +69,7 @@ func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		StudentID := r.URL.Query().Get("Student_ID")
 		// Check that it exists
 		if StudentID == "" {
-			Util.Error(400, "Malformed Request", "Required Paramaters have not been met, please read the API docs", "Invalid Request", w)
+			Util.Error(400, "Malformed Request", "Required Parameters have not been met, please read the API docs", "Invalid Request", w)
 			return
 		}
 
@@ -101,9 +89,6 @@ func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		NotFoundHandler(w, r)
 	}
 }
-
-
-
 
 // Main function
 func main() {

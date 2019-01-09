@@ -11,8 +11,6 @@ import (
 	"mynsb-api/internal/sessions"
 )
 
-
-
 // Handler for serving timetables
 /*
 	http handlers require minimal documentation
@@ -22,7 +20,7 @@ func ServeBellTimes(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	// Determine if the currently logged in student is allowed here
 	allowed, _ := sessions.UserIsAllowed(r, w, "student")
 	if !allowed {
-		quickerrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
@@ -32,24 +30,20 @@ func ServeBellTimes(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 		return
 	}
 
-
 	// Return the error
 	util.Error(200, "OK", getTimes(params["term"].(string), params["day"].(string), params["assembly"].(bool)), "Response", w)
 }
 
-
-
-
 /*
 	@ UTIL FUNCTIONS ===========================================
  */
- /*
- 	getTimes returns the times given specific parameters
- 	@params;
- 		term string
- 		day string
- 		assembly bool
-  */
+/*
+	getTimes returns the times given specific parameters
+	@params;
+		term string
+		day string
+		assembly bool
+ */
 func getTimes(term string, day string, assembly bool) string {
 	// Load up the hash map
 	Init()
@@ -83,13 +77,12 @@ func getTimes(term string, day string, assembly bool) string {
 	return string(json)
 }
 
-
 /*
  	getParams returns the parameters of the incoming request
  	@params;
  		r *http.Request
   */
-func getParams(r *http.Request) (map[string]interface{}, error){
+func getParams(r *http.Request) (map[string]interface{}, error) {
 	term := r.URL.Query().Get("Term")
 	day := r.URL.Query().Get("Day")
 	assembly := r.URL.Query().Get("Assembly")
@@ -113,7 +106,6 @@ func getParams(r *http.Request) (map[string]interface{}, error){
 
 	return toReturn, nil
 }
-
 
 /*
 	@ END UTIL FUNCTIONS ===========================================

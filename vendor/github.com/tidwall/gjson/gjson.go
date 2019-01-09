@@ -242,9 +242,9 @@ func (t Result) ForEach(iterator func(key, value Result) bool) {
 				return
 			}
 			if vesc {
-				key.Str = unescape(str[1 : len(str)-1])
+				key.Str = unescape(str[1: len(str)-1])
 			} else {
-				key.Str = str[1 : len(str)-1]
+				key.Str = str[1: len(str)-1]
 			}
 			key.Raw = str
 			key.Index = s
@@ -610,7 +610,7 @@ func parseString(json string, i int) (int, string, bool, bool) {
 			continue
 		}
 		if json[i] == '"' {
-			return i + 1, json[s-1 : i+1], false, true
+			return i + 1, json[s-1: i+1], false, true
 		}
 		if json[i] == '\\' {
 			i++
@@ -632,7 +632,7 @@ func parseString(json string, i int) (int, string, bool, bool) {
 							continue
 						}
 					}
-					return i + 1, json[s-1 : i+1], true, true
+					return i + 1, json[s-1: i+1], true, true
 				}
 			}
 			break
@@ -670,7 +670,7 @@ type arrayPathResult struct {
 	alogok  bool
 	arrch   bool
 	alogkey string
-	query   struct {
+	query struct {
 		on    bool
 		path  string
 		op    string
@@ -985,9 +985,9 @@ func parseObject(c *parseContext, i int, path string) (int, bool) {
 				}
 				if hit {
 					if vesc {
-						c.value.Str = unescape(val[1 : len(val)-1])
+						c.value.Str = unescape(val[1: len(val)-1])
 					} else {
-						c.value.Str = val[1 : len(val)-1]
+						c.value.Str = val[1: len(val)-1]
 					}
 					c.value.Raw = val
 					c.value.Type = String
@@ -1051,7 +1051,7 @@ func parseObject(c *parseContext, i int, path string) (int, bool) {
 func queryMatches(rp *arrayPathResult, value Result) bool {
 	rpv := rp.query.value
 	if len(rpv) > 2 && rpv[0] == '"' && rpv[len(rpv)-1] == '"' {
-		rpv = rpv[1 : len(rpv)-1]
+		rpv = rpv[1: len(rpv)-1]
 	}
 	switch value.Type {
 	case String:
@@ -1152,9 +1152,9 @@ func parseArray(c *parseContext, i int, path string) (int, bool) {
 						break
 					}
 					if vesc {
-						c.value.Str = unescape(val[1 : len(val)-1])
+						c.value.Str = unescape(val[1: len(val)-1])
 					} else {
-						c.value.Str = val[1 : len(val)-1]
+						c.value.Str = val[1: len(val)-1]
 					}
 					c.value.Raw = val
 					c.value.Type = String
@@ -1380,7 +1380,7 @@ func fromBytesGet(result Result) Result {
 		// safely copy the raw slice header
 		result.Raw = string(*(*[]byte)(unsafe.Pointer(&rawh)))
 		// substring the raw
-		result.Str = result.Raw[start : start+strh.Len]
+		result.Str = result.Raw[start: start+strh.Len]
 	} else {
 		// safely copy both the raw and str slice headers to strings
 		result.Raw = string(*(*[]byte)(unsafe.Pointer(&rawh)))
@@ -1558,9 +1558,9 @@ func parseAny(json string, i int, hit bool) (int, Result, bool) {
 				res.Type = String
 				res.Raw = val
 				if vesc {
-					res.Str = unescape(val[1 : len(val)-1])
+					res.Str = unescape(val[1: len(val)-1])
 				} else {
-					res.Str = val[1 : len(val)-1]
+					res.Str = val[1: len(val)-1]
 				}
 			}
 			return i, res, true
@@ -1759,10 +1759,10 @@ next_key:
 			}
 			if vesc {
 				// the value is escaped
-				key = unescape(val[1 : len(val)-1])
+				key = unescape(val[1: len(val)-1])
 			} else {
 				// just a plain old ascii key
-				key = val[1 : len(val)-1]
+				key = val[1: len(val)-1]
 			}
 			var hasMatch bool
 			var parsedVal bool
@@ -1819,8 +1819,8 @@ next_key:
 				// no match, jump to the nomatch label
 				goto nomatch
 			match_atend:
-				// found a match
-				// at the end of the path. we must take the value.
+			// found a match
+			// at the end of the path. we must take the value.
 				usedPaths++
 				if !parsedVal {
 					// the value has not been parsed yet. let's do so.
@@ -1839,8 +1839,8 @@ next_key:
 				// jump over the match_not_atend label
 				goto nomatch
 			match_not_atend:
-				// found a match
-				// still in the middle of the path.
+			// found a match
+			// still in the middle of the path.
 				usedPaths++
 				// mark the path as matched
 				matches[j] |= 1 << level

@@ -10,21 +10,12 @@ import (
 	"github.com/metakeule/fmtdate"
 	"io"
 	"net/http"
-	"os"
 	"time"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
+	"mynsb-api/internal/filesint"
+	"fmt"
 )
-
-
-
-
-
-
-
-
-
-
 
 /**
 	Func CreateEvent:
@@ -37,7 +28,6 @@ func Create(user student.User, event Event, db *sql.DB) error {
 	// Determine if the student is an admin
 	if student.IsAdmin(user) {
 
-
 		// EVENT EXISTS DETERMINATION ===============================
 		// Check that the event does not exist
 		// Determine the count using the util function
@@ -46,31 +36,18 @@ func Create(user student.User, event Event, db *sql.DB) error {
 		}
 		// EVENT EXISTS DETERMINATION END ===============================
 
-
-
 		// IMAGE CREATION =========================================
-		// Create image for the event
-
-		if _, err := os.Stat("assets/events/" + event.EventOrganiser); os.IsNotExist(err) {
-			os.Mkdir("assets/events/" + event.EventOrganiser, 0777)
-		}
-
-		os.Mkdir("assets/events/" + event.EventOrganiser + "/"  + event.EventName, 0777)
-
-		file, err := os.Create("assets/events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename)
+		eventPictureLoc := fmt.Sprintf("/events/%s/%s/%s", event.EventOrganiser, event.EventName, event.PictureHeader.Filename)
+		file, err := filesint.CreateFile("assets", eventPictureLoc)
 
 		if err != nil {
 			panic(err)
 		}
 
-
 		defer file.Close()
 		io.Copy(file, event.Picture)
-		// TODO: Change in production to actual ip
-		event.EventPictureURL = util.API_URL + "/api/v1/assets/events/" + event.EventOrganiser + "/"  + event.EventName + "/" + event.PictureHeader.Filename
+		event.EventPictureURL = fmt.Sprintf("%s/api/v1/assets%s", util.APIURL, eventPictureLoc)
 		// END IMAGE CREATION =====================================
-
-
 
 		// Insert the event at the absolute end
 		db.Exec("INSERT INTO events(event_name, event_start, event_end, event_location, event_organiser, "+
@@ -84,8 +61,6 @@ func Create(user student.User, event Event, db *sql.DB) error {
 	return errors.New("student does not have sufficient privileges")
 }
 
-
-
 func validateDateTime(dateStart, format string) (bool, time.Time) {
 
 	t, err := fmtdate.Parse(format, dateStart)
@@ -96,23 +71,23 @@ func validateDateTime(dateStart, format string) (bool, time.Time) {
 	return true, t
 
 }
+
 /*
 	UTIL FUNCTIONS ============================
  */
- /* getIncomingEvent takes a request and returns the incoming event for that request
- 		@params;
- 			r *http.Request
- 			student student.student
-  */
+/* getIncomingEvent takes a request and returns the incoming event for that request
+		@params;
+			r *http.Request
+			student student.student
+ */
 func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 	eventName := r.FormValue("Event_Name")
-	eventEnd  := r.FormValue("Event_End")
+	eventEnd := r.FormValue("Event_End")
 	eventStart := r.FormValue("Event_Start")
 	eventLocation := r.FormValue("Event_Location")
 	eventOrganiser := user.Name
 	eventShortDesc := r.FormValue("Event_Short_Desc")
 	eventLongDesc := r.FormValue("Event_Long_Desc")
-
 
 	if util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) && student.IsAdmin(user) {
 		// Attain the image
@@ -130,19 +105,16 @@ func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 			EventOrganiser: eventOrganiser,
 			EventShortDesc: eventShortDesc,
 			EventLongDesc:  eventLongDesc,
-			Picture: f,
-			PictureHeader: h,
+			Picture:        f,
+			PictureHeader:  h,
 		}
-
-
 
 		// Attain the date / time from the request ignore most of this part for maintainability
 		// <+++++++++++++++++++++ DATE EXTRACTION START ++++++++++++++++++++++++++>
-		err = parseDatesinto(&requestedEvent, eventStart, eventEnd)
+		err = parseDatesInto(&requestedEvent, eventStart, eventEnd)
 		if err != nil {
 			return Event{}, errors.New("invalid dates")
 		}
-
 
 		return requestedEvent, nil
 	}
@@ -150,33 +122,28 @@ func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 	return Event{}, errors.New("invalid request")
 
 }
-func parseDatesinto(requestedEvent *Event, eventStartstr string, eventEndstr string) error {
+
+func parseDatesInto(requestedEvent *Event, eventStartStr string, eventEndStr string) error {
 	// Event date
-	pass, eventStart := validateDateTime(eventStartstr, "DD-MM-YYYY hh:mm")
+	pass, eventStart := validateDateTime(eventStartStr, "DD-MM-YYYY hh:mm")
 	if eventStart.Unix() <= time.Now().Unix() || !pass {
 		return errors.New("invalid date")
 	}
 	requestedEvent.EventStart = eventStart
 
 	// Event time
-	pass, eventEnd := validateDateTime(eventEndstr, "DD-MM-YYYY hh:mm")
+	pass, eventEnd := validateDateTime(eventEndStr, "DD-MM-YYYY hh:mm")
 	if !pass {
 		return errors.New("invalid date")
 	}
 	requestedEvent.EventEnd = eventEnd
 
-
 	return nil
 }
+
 /*
 	END UTIL FUNCTIONS ============================
  */
-
-
-
-
-
-
 
 // Http handler for authentication
 /**
@@ -199,11 +166,10 @@ func CreateEventHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	// Close the database at the end
 	defer db.DB.Close()
 
-
-	// Get the student struct from an existing session and determin if they are allowed here
+	// Get the student struct from an existing session and determine if they are allowed here
 	allowed, user := sessions.UserIsAllowed(r, w, "admin")
 	if !allowed {
-		quickerrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 

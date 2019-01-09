@@ -15,8 +15,6 @@ import (
 	"errors"
 )
 
-
-
 // HTTP handler for attaining all events
 func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Connect to the database
@@ -29,7 +27,7 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var jsonResp []byte
 
 	// Determine which function is being request
-	switch requestType{
+	switch requestType {
 	case "GetAll":
 		// Perform that function
 		json, _ := GetAll(db.DB)
@@ -55,10 +53,6 @@ func GetEvents(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	util.Error(200, "OK", string(jsonResp), "Result: ", w)
 }
 
-
-
-
-
 // =======================================================
 // Function to attain an event with given details
 /*
@@ -74,7 +68,6 @@ func Get(event Event, db *sql.DB) (Event, error) {
 	return eventArr[0], err
 }
 
-
 /*
 	GetBetween returns all events between two given date strings
 	@params;
@@ -82,7 +75,7 @@ func Get(event Event, db *sql.DB) (Event, error) {
 		start string
 		end string
  */
-func GetBetween(db *sql.DB, start string, end string)  ([]Event, error){
+func GetBetween(db *sql.DB, start string, end string) ([]Event, error) {
 	// Begin converting our strings to actual dates
 	Start, err := fmtdate.Parse("DD-MM-YYYY", start)
 	if err != nil {
@@ -97,7 +90,6 @@ func GetBetween(db *sql.DB, start string, end string)  ([]Event, error){
 	return performRequest(db, "SELECT * FROM events WHERE event_start BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP", Start, End)
 }
 
-
 /*
 	GetAll returns all currently active events
 	@params;
@@ -106,23 +98,20 @@ func GetBetween(db *sql.DB, start string, end string)  ([]Event, error){
 func GetAll(db *sql.DB) ([]Event, error) {
 	return performRequest(db, "SELECT * FROM events")
 }
+
 // ==========================================================
-
-
-
-
 
 /*
 	@ UTIL FUNCTIONS START ====================================
  */
 /*
-	performrequest takes a question and some arguments and returns an array of events corresponding to that query
+	performRequest takes a question and some arguments and returns an array of events corresponding to that query
 	@params;
 		db *sql.db
 		query string
 		args ...interface{}
  */
- func performRequest(db *sql.DB, query string, args ...interface{}) ([]Event, error) {
+func performRequest(db *sql.DB, query string, args ...interface{}) ([]Event, error) {
 	// Perform 	query
 	rows, err := db.Query(query, args...)
 	// Throw error if exits
@@ -150,7 +139,6 @@ func GetAll(db *sql.DB) ([]Event, error) {
 	return finEvent, nil
 }
 
-
 /*
 	determineRequestType determines the request type of the incoming request and returns all parameters related to that request
 	@params;
@@ -162,18 +150,19 @@ func determineRequestType(r *http.Request) (string, map[string]string) {
 		typeReq = "GetAll"
 	} else if util.CompoundIsset(r.URL.Query().Get("Start"), r.URL.Query().Get("End")) {
 		typeReq = "Range"
-	} else{
+	} else {
 		typeReq = "Get"
 	}
 
 	// Prepare a map to return
 	toReturn := make(map[string]string)
 	toReturn["eventID"] = r.URL.Query().Get("Event_ID")
-	toReturn["start"]   = r.URL.Query().Get("Start")
-	toReturn["end"]     = r.URL.Query().Get("End")
+	toReturn["start"] = r.URL.Query().Get("Start")
+	toReturn["end"] = r.URL.Query().Get("End")
 
 	return typeReq, toReturn
 }
+
 /*
 	@ UTIL FUNCTIONS END ====================================
  */

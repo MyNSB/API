@@ -13,9 +13,6 @@ import (
 	"errors"
 )
 
-
-
-
 // Http handler for four u article requests
 /*
 	Handler's have minimal documentation
@@ -30,37 +27,32 @@ func GetFourUHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	// Determine the request type for the incoming request
 	requestType, params := determineRequestType(r)
 
-
 	// Perform the request in regards to parameters
 	switch {
 
-		case requestType: // Request type = all {check function documentation}
-			// Perform the get all function
-			articles := GetAll(db.DB)
-			// Encode result to json
-			bytes, _ := json.Marshal(articles)
+	case requestType: // Request type = all {check function documentation}
+		// Perform the get all function
+		articles := GetAll(db.DB)
+		// Encode result to json
+		bytes, _ := json.Marshal(articles)
 
-			// Encode result and return it to the student
-			util.Error(200, "OK", string(bytes), "Response", w)
+		// Encode result and return it to the student
+		util.Error(200, "OK", string(bytes), "Response", w)
 
-		default: // Request type = between {check function documentation}
+	default: // Request type = between {check function documentation}
 
-			// Perform it
-			res, err := GetBetween(params, db.DB)
-			if err != nil {
-				quickerrors.InteralServerError(w)
-				return
-			}
+		// Perform it
+		res, err := GetBetween(params, db.DB)
+		if err != nil {
+			quickerrors.InternalServerError(w)
+			return
+		}
 
-			// encode and return the result
-			bytes, _ := json.Marshal(res)
-			util.Error(200, "Ok", string(bytes), "Response", w)
+		// encode and return the result
+		bytes, _ := json.Marshal(res)
+		util.Error(200, "Ok", string(bytes), "Response", w)
 	}
 }
-
-
-
-
 
 // Functions to retrieve articles ==================
 
@@ -74,9 +66,8 @@ func GetAll(db *sql.DB) []Article {
 	return article
 }
 
-
 /*
-	Getbetween returns all function between specified times
+	GetBetween returns all function between specified times
 	@params;
 		times map[string]string
 		db *sql.db
@@ -99,18 +90,14 @@ func GetBetween(times map[string]string, db *sql.DB) ([]Article, error) {
 
 // ================================
 
-
-
-
-
 /*
 	@ UTIL FUNCTIONS ==================================================
  */
- /*
- 	determineRequestType determines the type of request for the incoming http.request, true for all false for between, it also returns parameters
- 	@params;
- 		r *http.Request
- */
+/*
+	determineRequestType determines the type of request for the incoming http.request, true for all false for between, it also returns parameters
+	@params;
+		r *http.Request
+*/
 func determineRequestType(r *http.Request) (bool, map[string]string) {
 	// Request Type
 	var typeReq bool
@@ -132,7 +119,6 @@ func determineRequestType(r *http.Request) (bool, map[string]string) {
 
 	return typeReq, toReturn
 }
-
 
 /*
 	performRequest performs a request given a query and some arguments it returns an array or articles and a possible error
@@ -165,6 +151,7 @@ func performRequest(db *sql.DB, query string, args ...interface{}) ([]Article, e
 
 	return result, nil
 }
+
 /*
 	@ END UTIL FUNCTIONS ==================================================
  */

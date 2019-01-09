@@ -14,7 +14,7 @@ import (
 
 // TODO: Find a Go library that will easily allow me to parse html
 
-func GetWeek(w http.ResponseWriter, r* http.Request, _ httprouter.Params) {
+func GetWeek(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 	// Determine the week type when term starts
 	startWeekType, termStart := getStartWeekType()
@@ -26,19 +26,15 @@ func GetWeek(w http.ResponseWriter, r* http.Request, _ httprouter.Params) {
 
 	// Determine the week type based on the weeksDiff
 	// Can be a lot more efficient but tbh i am really cbbs
-	if weeksDif % 2 == 1 && startWeekType == "A"{
+	if weeksDif%2 == 1 && startWeekType == "A" {
 		startWeekType = "B"
-	} else if weeksDif % 2 == 1 && startWeekType == "B" {
+	} else if weeksDif%2 == 1 && startWeekType == "B" {
 		startWeekType = "A"
 	}
 
 	// Return our result
 	util.SolidError(200, "OK", startWeekType, "week", w)
 }
-
-
-
-
 
 /*
 	UTIL FUNCTIONS ===========================
@@ -73,7 +69,6 @@ func getStartWeekType() (string, time.Time) {
 	return week, termStart
 }
 
-
 /* getTermDates returns the term dates for that year
 		@params;
 			nil
@@ -98,17 +93,16 @@ func getTermDates() (string, error) {
 		return "", errors.New("something went wrong when trying to retrieve calendar")
 	}
 
-	// Attain the resutls
+	// Attain the results
 	defer res.Body.Close()
 	bytes, _ := ioutil.ReadAll(res.Body)
-
 
 	// Parse data as json
 	value := gjson.Get(string(bytes), "term_dates")
 
-
 	return value.String(), nil
 }
+
 /*
 	END UTIL FUNCTIONS ===========================
  */

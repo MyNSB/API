@@ -1,12 +1,10 @@
 package student
 
-
 type User struct {
 	Name        string
 	Password    string
 	Permissions []string
 }
-
 
 func IsAdmin(user User) bool {
 	Permissions := user.Permissions
@@ -18,5 +16,3 @@ func IsAdmin(user User) bool {
 	}
 	return false
 }
-
-

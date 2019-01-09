@@ -1,97 +1,97 @@
 {
-	"comment": "",
-	"ignore": "test",
-	"package": [
-		{
-			"checksumSHA1": "r+ilR/OuKtLg52zss5rTOihB/+o=",
-			"path": "github.com/Azure/go-ntlmssp",
-			"revision": "c92175d540060095c69ced311f76aea56c83ecdb",
-			"revisionTime": "2017-08-03T03:49:30Z"
-		},
-		{
-			"checksumSHA1": "t+uej2kiyqRyQYguygI8t9nJH2w=",
-			"path": "github.com/SermoDigital/jose",
-			"revision": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9",
-			"revisionTime": "2016-12-05T22:51:55Z"
-		},
-		{
-			"checksumSHA1": "Gn3/aE/vkRN2thdpIc6mi4TvcqA=",
-			"path": "github.com/buger/jsonparser",
-			"revision": "5096fddd2cca678b0801ece8513a06e580981fd2",
-			"revisionTime": "2017-10-14T09:43:26Z"
-		},
-		{
-			"checksumSHA1": "pbSvEgw/W5DOfXr1zApGBWB1+kM=",
-			"path": "github.com/dgrijalva/jwt-go",
-			"revision": "a539ee1a749a2b895533f979515ac7e6e0f5b650",
-			"revisionTime": "2017-06-08T00:51:49Z"
-		},
-		{
-			"checksumSHA1": "pp8Fu4MQqAruqJPrVZFqACWCE98=",
-			"path": "github.com/gorilla/context",
-			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
-			"revisionTime": "2016-08-17T18:46:32Z"
-		},
-		{
-			"checksumSHA1": "HCKE3f0O1H5P5pFb+SNU6UKRELM=",
-			"path": "github.com/gorilla/securecookie",
-			"revision": "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983",
-			"revisionTime": "2017-02-24T19:38:04Z"
-		},
-		{
-			"checksumSHA1": "y/5G6f9Alz5oOULFEMl8tdF4BV4=",
-			"path": "github.com/gorilla/sessions",
-			"revision": "a3acf13e802c358d65f249324d14ed24aac11370",
-			"revisionTime": "2017-10-08T21:47:40Z"
-		},
-		{
-			"checksumSHA1": "gKyBj05YkfuLFruAyPZ4KV9nFp8=",
-			"path": "github.com/julienschmidt/httprouter",
-			"revision": "975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e",
-			"revisionTime": "2017-04-30T22:20:11Z"
-		},
-		{
-			"checksumSHA1": "gRuugY/HKUKZg+Qyhipsfcm0KB0=",
-			"path": "github.com/lib/pq",
-			"revision": "b77235e3890a962fe8a6f8c4c7198679ca7814e7",
-			"revisionTime": "2017-09-22T17:26:34Z"
-		},
-		{
-			"checksumSHA1": "ATnwV0POluBNQEMjPdylodz0oK0=",
-			"path": "github.com/lib/pq/oid",
-			"revision": "b77235e3890a962fe8a6f8c4c7198679ca7814e7",
-			"revisionTime": "2017-09-22T17:26:34Z"
-		},
-		{
-			"checksumSHA1": "9PyBQcHeiT1hOqc/zsHNaEUvhLE=",
-			"path": "github.com/metakeule/fmtdate",
-			"revision": "df8ae9daa6b01ee9c6c4f0b09638cf2f33f93510",
-			"revisionTime": "2017-07-19T12:44:30Z"
-		},
-		{
-			"checksumSHA1": "a++hH5H53isY1CJ//kOr10H1Auk=",
-			"path": "github.com/rs/cors",
-			"revision": "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8",
-			"revisionTime": "2017-08-01T07:32:01Z"
-		},
-		{
-			"checksumSHA1": "c/yuPZAlfD+E3M8ZlItISaMQb8g=",
-			"path": "github.com/tidwall/gjson",
-			"revision": "080cd2281672e2db949148e6f07cc2e9630fb480",
-			"revisionTime": "2017-12-13T23:29:27Z"
-		},
-		{
-			"checksumSHA1": "gEpdu1QrdYgZVliuH3JhGph9TQY=",
-			"path": "github.com/tidwall/match",
-			"revision": "1731857f09b1f38450e2c12409748407822dc6be",
-			"revisionTime": "2017-10-02T07:59:45Z"
-		},
-		{
-			"checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",
-			"path": "golang.org/x/crypto/md4",
-			"revision": "9419663f5a44be8b34ca85f08abc5fe1be11f8a3",
-			"revisionTime": "2017-09-30T17:45:11Z"
-		}
-	],
-	"rootPath": "mynsb-api"
+  "comment": "",
+  "ignore": "test",
+  "package": [
+    {
+      "checksumSHA1": "r+ilR/OuKtLg52zss5rTOihB/+o=",
+      "path": "github.com/Azure/go-ntlmssp",
+      "revision": "c92175d540060095c69ced311f76aea56c83ecdb",
+      "revisionTime": "2017-08-03T03:49:30Z"
+    },
+    {
+      "checksumSHA1": "t+uej2kiyqRyQYguygI8t9nJH2w=",
+      "path": "github.com/SermoDigital/jose",
+      "revision": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9",
+      "revisionTime": "2016-12-05T22:51:55Z"
+    },
+    {
+      "checksumSHA1": "Gn3/aE/vkRN2thdpIc6mi4TvcqA=",
+      "path": "github.com/buger/jsonparser",
+      "revision": "5096fddd2cca678b0801ece8513a06e580981fd2",
+      "revisionTime": "2017-10-14T09:43:26Z"
+    },
+    {
+      "checksumSHA1": "pbSvEgw/W5DOfXr1zApGBWB1+kM=",
+      "path": "github.com/dgrijalva/jwt-go",
+      "revision": "a539ee1a749a2b895533f979515ac7e6e0f5b650",
+      "revisionTime": "2017-06-08T00:51:49Z"
+    },
+    {
+      "checksumSHA1": "pp8Fu4MQqAruqJPrVZFqACWCE98=",
+      "path": "github.com/gorilla/context",
+      "revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+      "revisionTime": "2016-08-17T18:46:32Z"
+    },
+    {
+      "checksumSHA1": "HCKE3f0O1H5P5pFb+SNU6UKRELM=",
+      "path": "github.com/gorilla/securecookie",
+      "revision": "e59506cc896acb7f7bf732d4fdf5e25f7ccd8983",
+      "revisionTime": "2017-02-24T19:38:04Z"
+    },
+    {
+      "checksumSHA1": "y/5G6f9Alz5oOULFEMl8tdF4BV4=",
+      "path": "github.com/gorilla/sessions",
+      "revision": "a3acf13e802c358d65f249324d14ed24aac11370",
+      "revisionTime": "2017-10-08T21:47:40Z"
+    },
+    {
+      "checksumSHA1": "gKyBj05YkfuLFruAyPZ4KV9nFp8=",
+      "path": "github.com/julienschmidt/httprouter",
+      "revision": "975b5c4c7c21c0e3d2764200bf2aa8e34657ae6e",
+      "revisionTime": "2017-04-30T22:20:11Z"
+    },
+    {
+      "checksumSHA1": "gRuugY/HKUKZg+Qyhipsfcm0KB0=",
+      "path": "github.com/lib/pq",
+      "revision": "b77235e3890a962fe8a6f8c4c7198679ca7814e7",
+      "revisionTime": "2017-09-22T17:26:34Z"
+    },
+    {
+      "checksumSHA1": "ATnwV0POluBNQEMjPdylodz0oK0=",
+      "path": "github.com/lib/pq/oid",
+      "revision": "b77235e3890a962fe8a6f8c4c7198679ca7814e7",
+      "revisionTime": "2017-09-22T17:26:34Z"
+    },
+    {
+      "checksumSHA1": "9PyBQcHeiT1hOqc/zsHNaEUvhLE=",
+      "path": "github.com/metakeule/fmtdate",
+      "revision": "df8ae9daa6b01ee9c6c4f0b09638cf2f33f93510",
+      "revisionTime": "2017-07-19T12:44:30Z"
+    },
+    {
+      "checksumSHA1": "a++hH5H53isY1CJ//kOr10H1Auk=",
+      "path": "github.com/rs/cors",
+      "revision": "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8",
+      "revisionTime": "2017-08-01T07:32:01Z"
+    },
+    {
+      "checksumSHA1": "c/yuPZAlfD+E3M8ZlItISaMQb8g=",
+      "path": "github.com/tidwall/gjson",
+      "revision": "080cd2281672e2db949148e6f07cc2e9630fb480",
+      "revisionTime": "2017-12-13T23:29:27Z"
+    },
+    {
+      "checksumSHA1": "gEpdu1QrdYgZVliuH3JhGph9TQY=",
+      "path": "github.com/tidwall/match",
+      "revision": "1731857f09b1f38450e2c12409748407822dc6be",
+      "revisionTime": "2017-10-02T07:59:45Z"
+    },
+    {
+      "checksumSHA1": "MCeXr2RNeiG1XG6V+er1OR0qyeo=",
+      "path": "golang.org/x/crypto/md4",
+      "revision": "9419663f5a44be8b34ca85f08abc5fe1be11f8a3",
+      "revisionTime": "2017-09-30T17:45:11Z"
+    }
+  ],
+  "rootPath": "mynsb-api"
 }

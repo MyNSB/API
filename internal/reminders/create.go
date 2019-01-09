@@ -14,7 +14,6 @@ import (
 	"github.com/metakeule/fmtdate"
 	"mynsb-api/internal/quickerrors"
 	"errors"
-	"fmt"
 )
 
 func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
@@ -28,22 +27,18 @@ func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
 		studentID, headersTXT, reminder.Body, jsonTXT, reminder.ReminderDateTime)
 
 	if err != nil {
-		return errors.New("Oopsie, Doopsie, Doo")
+		return errors.New("oopsie, doopsie, doo")
 	}
 
 	return nil
 }
 
-
-
 // Create reminders handler
 func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
 
 	user, _ := sessions.ParseSessions(r, w)
 
 	r.ParseForm()
-
 
 	// Login into database
 	db.Conn("admin")
@@ -51,14 +46,11 @@ func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	// Close the connection at the end
 	defer db.DB.Close()
 
-
 	// Get the post vars
 	body := r.PostFormValue("Body")
 	subject := r.PostFormValue("Subject")
 	reminderDateTime := r.PostFormValue("Reminder_Date_Time")
 	tagsTXT := r.PostFormValue("Tags")
-
-	fmt.Printf("Form-Data", r.PostForm.Encode())
 
 	// Get the required fields
 	if util.CompoundIsset(body, reminderDateTime, tagsTXT, subject) {
@@ -84,15 +76,13 @@ func CreateReminderHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 			return
 		}
 
-
 		// Push everything into a reminders type
 		reminder := Reminder{
-			Headers: headers,
-			Body: body,
-			Tags: tags,
+			Headers:          headers,
+			Body:             body,
+			Tags:             tags,
 			ReminderDateTime: reminderDateTimeVal,
 		}
-
 
 		// Push everything into the database
 		err = CreateReminder(db.DB, user, reminder)

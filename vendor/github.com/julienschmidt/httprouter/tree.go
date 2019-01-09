@@ -34,7 +34,7 @@ func countParams(path string) uint8 {
 type nodeType uint8
 
 const (
-	static nodeType = iota // default
+	static   nodeType = iota // default
 	root
 	param
 	catchAll
@@ -143,7 +143,7 @@ func (n *node) addRoute(path string, handle Handle) {
 
 					// Check if the wildcard matches
 					if len(path) >= len(n.path) && n.path == path[:len(n.path)] &&
-						// Check for longer wildcard, e.g. :name and :names
+					// Check for longer wildcard, e.g. :name and :names
 						(len(n.path) >= len(path) || path[len(n.path)] == '/') {
 						continue walk
 					} else {

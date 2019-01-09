@@ -30,7 +30,7 @@ func recvNotification(r *readBuf) *Notification {
 }
 
 const (
-	connStateIdle int32 = iota
+	connStateIdle                int32 = iota
 	connStateExpectResponse
 	connStateExpectReadyForQuery
 )

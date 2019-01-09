@@ -14,8 +14,6 @@ import (
 	"mynsb-api/internal/jwt"
 )
 
-
-
 // Http handler for admin authentication
 /*
 	Handler's have minimal documentation
@@ -43,14 +41,13 @@ func AdminAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 	// Process these details
 	err = processDetails(details, w, r)
 	if err != nil {
-		quickerrors.NotEnoughPrivledges(w)
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
 	// All g
 	quickerrors.OK(w)
 }
-
 
 /*
 	auth takes the username and password and checks if the admin really exists in the database, the function can be called from anywhere
@@ -62,35 +59,29 @@ func AdminAuthHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 func Auth(Username, Password string, db *sql.DB) (admin.Admin, error) {
 	passwordHash := util.HashString(Password)
 
-	// Determine if admin exists in database
-	if count, err := util.CheckCount(db,"SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
-		return admin.Admin{}, errors.New("admin does not exist")
+	// Determine if currAdmin exists in database
+	if count, err := util.CheckCount(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
+		return admin.Admin{}, errors.New("currAdmin does not exist")
 	}
 
-
-	// Finally query the database for the admin's details
+	// Finally query the database for the currAdmin's details
 	rows, _ := db.Query("SELECT admin_permissions FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
 	defer rows.Close()
 
-
 	// Actual student
-	// Construct the admin
-	admin := admin.Admin{
+	// Construct the currAdmin
+	currAdmin := admin.Admin{
 		Name:     Username,
 		Password: Password,
 	}
 
-
-	// Scan the admin details into the admin variable
+	// Scan the currAdmin details into the currAdmin variable
 	for rows.Next() {
-		admin.ScanFrom(rows)
+		currAdmin.ScanFrom(rows)
 	}
 
-	return admin, nil
+	return currAdmin, nil
 }
-
-
-
 
 /*
 	@ UTIL FUNCTIONS ==================================================
@@ -104,7 +95,6 @@ func getAuthDetails(r *http.Request) (map[string]string, error) {
 	// Retrieve auth details
 	Username := ""
 	Password := ""
-
 
 	// Attain the details
 	if username, password, ok := r.BasicAuth(); !ok || username == "" || password == "" {
@@ -124,41 +114,38 @@ func getAuthDetails(r *http.Request) (map[string]string, error) {
 	return toReturn, nil
 }
 
-
 /*
 	processDetails takes the details map and determines if they really are an admin, it then converts that admin to a student, calculates
-	the jwt representation of it generates session details for the student requesting to authenticate and then exists, phew thats a lot
+	the jwt representation of it generates session details for the student requesting to authenticate and then exists, phew that's a lot
 	@params;
 		details map[string]string
 		w http.ResponseWriter
 		r* http.Request
  */
-func processDetails(details map[string]string, w http.ResponseWriter, r* http.Request) error {
+func processDetails(details map[string]string, w http.ResponseWriter, r *http.Request) error {
 	// Authenticate
 	currAdmin, err := Auth(details["username"], details["password"], db.DB)
 	if err != nil {
 		return errors.New("invalid admin details")
 	}
 
-	// Convert the admin to a student so a jwt can be generated
-	user := admin.AdminToUser(currAdmin)
+	// Convert the admin to a student so a jwtToken can be generated
+	user := admin.ToUser(currAdmin)
 
-	// Create the jwt
-	jwt, err := jwt.GenJWT(userToMap(user))
+	// Create the jwtToken
+	jwtToken, err := jwt.GenJWT(userToMap(user))
 	if err != nil {
 		return errors.New("something went wrong")
 	}
 
-	// Generate a session from the given jwt
-	err = sessions.GenerateSession(w, r, jwt)
+	// Generate a session from the given jwtToken
+	err = sessions.GenerateSession(w, r, jwtToken)
 	if err != nil {
 		return errors.New("something went wrong")
 	}
 
 	return nil
 }
-
-
 
 /*
 	@ END UTIL FUNCTIONS ==================================================

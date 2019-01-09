@@ -1,22 +1,16 @@
 package util
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
+	"go/build"
 )
 
-
-const API_URL = "http://127.0.0.1"
-
-
+const APIURL = "http://127.0.0.1"
 
 /**
 	Func Search:
@@ -37,10 +31,15 @@ func ExistsString(array []string, entry string) bool {
 	return false
 }
 
+func GetGOPATH() string {
+	// Get the GOPATH
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
 
-
-
-
+	return gopath
+}
 
 /**
 	Func isset:
@@ -51,15 +50,9 @@ func ExistsString(array []string, entry string) bool {
 		False: Var doesn't exist
 **/
 
-func Isset(thingo string) bool {
-	return thingo != ""
+func Isset(thing string) bool {
+	return thing != ""
 }
-
-
-
-
-
-
 
 // Abstraction of isset
 func CompoundIsset(vars ...string) bool {
@@ -70,7 +63,6 @@ func CompoundIsset(vars ...string) bool {
 	}
 	return true
 }
-
 
 func HashString(toHash string) string {
 	// Create a hasher
@@ -83,8 +75,6 @@ func HashString(toHash string) string {
 	return sha256Hash
 }
 
-
-
 func IsSubset(first, second []string) bool {
 	for _, val := range first {
 		if !ExistsString(second, val) {
@@ -92,10 +82,8 @@ func IsSubset(first, second []string) bool {
 		}
 	}
 
-
 	return true
 }
-
 
 // Function to remove all that ugly code error e.t.c
 func Error(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
@@ -104,8 +92,6 @@ func Error(status int, statusMessage string, body string, title string, w http.R
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":[%s]}}`, status, statusMessage, title, body)))
 }
 
-
-
 // Function to remove all that ugly code error e.t.c
 func SolidError(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
@@ -113,40 +99,7 @@ func SolidError(status int, statusMessage string, body string, title string, w h
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":"%s"}}`, status, statusMessage, title, body)))
 }
 
-
-
-
-
 // Function to encrypt error messages for fixing later
-func Encrypt(key []byte, text string) string {
-	// key := []byte(keyText)
-	plaintext := []byte(text)
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err)
-	}
-
-	// The IV needs to be unique, but not secure. Therefore it's common to
-	// include it at the beginning of the ciphertext.
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		panic(err)
-	}
-
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
-
-	// convert to base64
-	return base64.URLEncoding.EncodeToString(ciphertext)
-}
-
-
-
-
-
-
 
 // Function to return the number of returned rows it takes an actual query coz go is fucking stupid and will only let you iterate over the fucking set one fucking time!!!!
 func CheckCount(db *sql.DB, query string, args ...interface{}) (int, error) {

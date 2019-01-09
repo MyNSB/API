@@ -16,33 +16,25 @@ import (
 	"github.com/rs/cors"
 )
 
-
-
-
 // 404 Handler
-func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+func NotFoundHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Header().Set("Content-Type", "text/json")
-	w.Write([]byte(`{"Status":{"Code": 404, "Status Message":"404 Not Found"},"Message": {"Title":"An Error Occured", "Body":"The file you requested could not be found on this server."}}`))
+	w.Write([]byte(`{"Status":{"Code": 404, "Status Message":"404 Not Found"},"Message": {"Title":"An Error Occurred", "Body":"The file you requested could not be found on this server."}}`))
 }
 
-
-
-
 // Index handler
-func IndexHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func IndexHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/json")
 	w.Write([]byte(`{"Status":{"Code": 200, "Status Message":"200 OK"},"Message": {"Title":"Hello There!", "Body":"Welcome to the MyNSB API."}}`))
 }
-
 
 // Main function
 func main() {
 
 	// Start router
 	router := httprouter.New()
-
 
 	// GENERAL ===================
 	// Set 404 handler
@@ -95,9 +87,7 @@ func main() {
 	router.GET("/mynsb-api/v1/week/Get", week.GetWeek)
 	// END WEEK A B STUFF =============================
 
-
 	c := cors.AllowAll().Handler(router)
-
 
 	// Begin listening on port 8080
 	http.ListenAndServe("0.0.0.0:8080", c)
