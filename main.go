@@ -40,51 +40,51 @@ func main() {
 	// Set 404 handler
 	router.NotFound = http.HandlerFunc(NotFoundHandler)
 	// Regular router functions
-	router.GET("/mynsb-api/v1", IndexHandler)
+	router.GET("/api/v1", IndexHandler)
 	// END GENERAL ===============
 
 	// TIMETABLE ==================
 	// Handle timetable exports
-	router.GET("/mynsb-api/v1/timetable/Get", timetable.ExportTimetable)
+	router.GET("/api/v1/timetable/Get", timetable.ExportTimetable)
 	// END TIMETABLE ==============
 
 	// EVENTS ===================
 	// Handle event creation
-	router.POST("/mynsb-api/v1/events/Create", events.CreateEventHandler)
-	router.GET("/mynsb-api/v1/events/Get", events.GetEvents)
-	router.GET("/mynsb-api/v1/events/calendar/Get", calendar.GetCalendar)
+	router.POST("/api/v1/events/Create", events.CreateEventHandler)
+	router.GET("/api/v1/events/Get", events.GetEvents)
+	router.GET("/api/v1/events/calendar/Get", calendar.GetCalendar)
 	// END EVENTS =====================
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
 	// Handle authentication
-	router.POST("/mynsb-api/v1/student/auth", auth.UserAuthHandler)
-	router.POST("/mynsb-api/v1/admin/auth", auth.AdminAuthHandler)
-	router.POST("/mynsb-api/v1/student/Logout", auth.Logout)
-	router.GET("/mynsb-api/v1/student/GetDetails", userdetails.GetDetailsHandler)
-	router.GET("/mynsb-api/v1/admin/GetDetails", admin.GetDetailsHandler)
+	router.POST("/api/v1/student/auth", auth.UserAuthHandler)
+	router.POST("/api/v1/admin/auth", auth.AdminAuthHandler)
+	router.POST("/api/v1/student/Logout", auth.Logout)
+	router.GET("/api/v1/student/GetDetails", userdetails.GetDetailsHandler)
+	router.GET("/api/v1/admin/GetDetails", admin.GetDetailsHandler)
 	// END AUTHENTICATION AND USERS ==================
 
 	// Handler for file server for assets e.t.c
-	router.ServeFiles("/mynsb-api/v1/assets/*filepath", http.Dir("assets"))
+	router.ServeFiles("/api/v1/assets/*filepath", http.Dir("assets"))
 
 	// BELL TIMES ====================================
-	router.GET("/mynsb-api/v1/belltimes/Get", belltimes.ServeBellTimes)
+	router.GET("/api/v1/belltimes/Get", belltimes.ServeBellTimes)
 	// END BELL TIMES ================================
 
 	// 4U STUFF =======================================
-	router.GET("/mynsb-api/v1/4U/Get", _4U.GetFourUHandler)
-	router.POST("/mynsb-api/v1/4U/Create", _4U.CreateFourUHandler)
-	router.POST("/mynsb-api/v1/4U/Create/Article", _4U.CreateFourUArticleHandler)
+	router.GET("/api/v1/4U/Get", _4U.GetFourUHandler)
+	router.POST("/api/v1/4U/Create", _4U.CreateFourUHandler)
+	router.POST("/api/v1/4U/Create/Article", _4U.CreateFourUArticleHandler)
 	// END 4U STUFF ===================================
 
 	// REMINDERS ======================================
-	router.POST("/mynsb-api/v1/reminders/Create", reminders.CreateReminderHandler)
-	router.GET("/mynsb-api/v1/reminders/Get/*reqType", reminders.GetRemindersHandler)
-	router.POST("/mynsb-api/v1/reminders/Delete", reminders.DeleteReminderHandler)
+	router.POST("/api/v1/reminders/Create", reminders.CreateReminderHandler)
+	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetRemindersHandler)
+	router.POST("/api/v1/reminders/Delete", reminders.DeleteReminderHandler)
 	// END REMINDERS STUFF ============================
 
 	// WEEK A B STUFF =================================
-	router.GET("/mynsb-api/v1/week/Get", week.GetWeek)
+	router.GET("/api/v1/week/Get", week.GetWeek)
 	// END WEEK A B STUFF =============================
 
 	c := cors.AllowAll().Handler(router)

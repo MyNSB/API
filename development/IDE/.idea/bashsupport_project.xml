@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BashSupportProjectSettings">
+    <option name="globalVariables">
+      <set>
+        <option value="API_DIR" />
+        <option value="DATA_DUMP" />
+        <option value="GOPATH" />
+        <option value="GOROOT" />
+        <option value="USER" />
+        <option value="USERDIR" />
+        <option value="api_dir" />
+        <option value="dump" />
+      </set>
+    </option>
+  </component>
+</project>
