@@ -65,7 +65,7 @@ func Auth(Username, Password string, db *sql.DB) (admin.Admin, error) {
 	}
 
 	// Finally query the database for the currAdmin's details
-	rows, _ := db.Query("SELECT admin_permissions FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
+	rows, _ := db.Query("SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
 	defer rows.Close()
 
 	// Actual student

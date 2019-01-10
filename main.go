@@ -80,7 +80,7 @@ func main() {
 	// REMINDERS ======================================
 	router.POST("/api/v1/reminders/Create", reminders.CreateHandler) /**/
 	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetHandler) /**/
-	router.POST("/api/v1/reminders/Delete", reminders.DeleteHandler)
+	router.POST("/api/v1/reminders/Delete", reminders.DeleteHandler) /**/
 	// END REMINDERS STUFF ============================
 
 	// WEEK A B STUFF =================================

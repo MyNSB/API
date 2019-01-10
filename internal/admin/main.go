@@ -7,6 +7,7 @@ import (
 )
 
 type Admin struct {
+	ID			int
 	Name        string
 	Password    string
 	Permissions []string
@@ -25,9 +26,9 @@ func ToUser(admin Admin) student.User {
 func (admin *Admin) ScanFrom(rows *sql.Rows) {
 	// Get the permissions
 	var adminPermissions []byte
-	rows.Scan(&adminPermissions)
+	rows.Scan(&admin.ID, &admin.Name, &admin.Password, &adminPermissions)
 
 	// Unmarshal the perms
-	json.Unmarshal([]byte(adminPermissions), &admin.Permissions)
+	json.Unmarshal(adminPermissions, &admin.Permissions)
 
 }
