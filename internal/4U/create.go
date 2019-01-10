@@ -17,65 +17,6 @@ import (
 	"time"
 )
 
-// Http handler for four u request publications
-/*
-	Handler's have minimal documentation
-*/
-
-// CreateIssueHandler creates 4U issues
-func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	// Connect to database
-	db.Conn("admin")
-	// Close database at the end
-	defer db.DB.Close()
-
-	// Determine if the student is allowed here and if not force them to leave
-	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
-	if !allowed {
-		quickerrors.NotEnoughPrivileges(w)
-		return
-	}
-
-	// Get the incoming article
-	article, err := getIncomingArticle(r)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
-	}
-
-	// Push the article into the database
-	err = CreateIssue(article, db.DB)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "4U Issue/Issue already exists")
-		return
-	}
-
-	quickerrors.OK(w)
-}
-
-// CreateArticleHandler is a HTTP handler for article creation
-func CreateArticleHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-
-	// Connect to database
-	db.Conn("admin")
-	// Close database at the end
-	defer db.DB.Close()
-
-	// Parse the incoming article
-	article, err := getIncomingArticleSpecific(r)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
-	}
-
-	// Finally push the new article
-	err = CreateArticle(Issue{ID: article.ParentID}, article, db.DB)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "Looks like that article already exists")
-		return
-	}
-
-	quickerrors.OK(w)
-}
 
 /*	CreateIssue takes an issue and pushes that into the database it also saves the incoming image for that article returns an error on a failure
 	@params;
@@ -107,6 +48,8 @@ func CreateIssue(issue Issue, db *sql.DB) error {
 	return nil
 }
 
+
+
 /* CreateArticle appends a new article to the 4U paper
 @params;
 	article FourU.Issue
@@ -133,6 +76,15 @@ func CreateArticle(parent Issue, article Article, db *sql.DB) error {
 	return nil
 }
 
+
+
+
+
+
+
+
+
+
 /*
 	@ UTIL FUNCTIONS ==================================================
 */
@@ -145,10 +97,11 @@ func CreateArticle(parent Issue, article Article, db *sql.DB) error {
 */
 func createImage(issue Issue, imageSaveDir string) error {
 	// Create the issue for the 4U directory
-	fourUDir := fmt.Sprintf("/4U/%s/%s/%s/%s", issue.TypePost, imageSaveDir, issue.Name, issue.PictureHeader.Filename)
-	file, err := filesint.CreateFile("assets", fourUDir)
+	fourUDir := fmt.Sprintf("/4U/%s/%s/%s", issue.TypePost, imageSaveDir, issue.Name)
+	file, err := filesint.CreateFile("assets", fourUDir, issue.PictureHeader.Filename)
 
 	if err != nil {
+		fmt.Printf("%s", err.Error())
 		return errors.New("could not create image")
 	}
 
@@ -158,23 +111,21 @@ func createImage(issue Issue, imageSaveDir string) error {
 	return nil
 }
 
+
 /*
-	getIncomingArticle attains the incoming article from the request and returns an article and/or an error
+	getIncomingIssue attains the incoming article from the request and returns an article and/or an error
 	@params;
 		r *http.Request
 
 */
-func getIncomingArticle(r *http.Request) (Issue, error) {
-	// Parse incoming form
-	r.ParseForm()
+func getIncomingIssue(r *http.Request) (Issue, error) {
 	// Get the issue details
-	issueName := r.Form.Get("Post_Name")
-	issueDesc := r.Form.Get("Post_Desc")
-	issuuLink := r.Form.Get("Link") // <--- Spelt this way on purpose
-	typePost := r.Form.Get("Post_Type")
+	issueName := r.FormValue("Post_Name")
+	issueDesc := r.FormValue("Post_Desc")
+	issuuLink := r.FormValue("Link") // <--- Spelt this way on purpose
 
 	// Issue is invalid so throw an error
-	if !(util.CompoundIsset(issueName, issueDesc, issuuLink, typePost) || !(typePost == "Issue")) {
+	if !(util.CompoundIsset(issueName, issueDesc, issuuLink)) {
 		return Issue{}, errors.New("invalid issue")
 	}
 
@@ -191,16 +142,14 @@ func getIncomingArticle(r *http.Request) (Issue, error) {
 		Name:          issueName,
 		Desc:          issueDesc,
 		Link:          issuuLink,
-		TypePost:      typePost,
+		TypePost:      "Issue",
 	}
 	// Set the publish date
 	issue.PublishDate = time.Now()
 	return issue, nil
 }
 
-func getIncomingArticleSpecific(r *http.Request) (Article, error) {
-	// Parse that boy
-	r.ParseForm()
+func getIncomingArticle(r *http.Request) (Article, error) {
 	// Get the article details
 	articleName := r.Form.Get("Article_Name")
 	parentIssueIDRaw := r.Form.Get("Parent_ID")
@@ -230,3 +179,82 @@ func getIncomingArticleSpecific(r *http.Request) (Article, error) {
 /*
 	@ END UTIL FUNCTIONS ==================================================
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Http handler for four u request publications
+/*
+	Handler's have minimal documentation
+*/
+
+// CreateIssueHandler creates 4U issues
+func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	// Connect to database
+	db.Conn("admin")
+	// Close database at the end
+	defer db.DB.Close()
+
+	// Determine if the student is allowed here and if not force them to leave
+	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
+	if !allowed {
+		quickerrors.NotEnoughPrivileges(w)
+		return
+	}
+
+
+	// Parse the incoming form
+	r.ParseMultipartForm(1000000)
+
+	// Get the incoming article
+	issue, err := getIncomingIssue(r)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
+		return
+	}
+
+	// Push the article into the database
+	err = CreateIssue(issue, db.DB)
+	if err != nil {
+		panic(err)
+		quickerrors.MalformedRequest(w, "4U Issue/Issue already exists")
+		return
+	}
+
+	quickerrors.OK(w)
+}
+
+// CreateArticleHandler is a HTTP handler for article creation
+func CreateArticleHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	// Connect to database
+	db.Conn("admin")
+	// Close database at the end
+	defer db.DB.Close()
+
+	// Parse the incoming article
+	article, err := getIncomingArticle(r)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
+	}
+
+	// Finally push the new article
+	err = CreateArticle(Issue{ID: article.ParentID}, article, db.DB)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "Looks like that article already exists")
+		return
+	}
+
+	quickerrors.OK(w)
+}

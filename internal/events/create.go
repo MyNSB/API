@@ -37,8 +37,8 @@ func Create(user student.User, event Event, db *sql.DB) error {
 		// EVENT EXISTS DETERMINATION END ===============================
 
 		// IMAGE CREATION =========================================
-		eventPictureLoc := fmt.Sprintf("/events/%s/%s/%s", event.EventOrganiser, event.EventName, event.PictureHeader.Filename)
-		file, err := filesint.CreateFile("assets", eventPictureLoc)
+		eventPictureLoc := fmt.Sprintf("/events/%s/%s", event.EventOrganiser, event.EventName)
+		file, err := filesint.CreateFile("assets", eventPictureLoc, event.PictureHeader.Filename)
 
 		if err != nil {
 			panic(err)
@@ -89,7 +89,7 @@ func getIncomingEvent(r *http.Request, user student.User) (Event, error) {
 	eventShortDesc := r.FormValue("Event_Short_Desc")
 	eventLongDesc := r.FormValue("Event_Long_Desc")
 
-	if util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) && student.IsAdmin(user) {
+	if util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) {
 		// Attain the image
 
 		// Get the image uploading thing
@@ -168,7 +168,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 
 	// Get the student struct from an existing session and determine if they are allowed here
 	allowed, user := sessions.UserIsAllowed(r, w, "admin")
-	if !allowed {
+	if !allowed || !student.IsAdmin(user) {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}

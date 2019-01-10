@@ -21,7 +21,7 @@ func AlreadyLoggedIn(w http.ResponseWriter) {
 }
 
 func NotLoggedIn(w http.ResponseWriter) {
-	dropErr(400, "Hmp??", "student is not logged in or can't access this section of the API", "Something went wrong...", w)
+	dropErr(400, "Hmp??", "user is not logged in or can't access this section of the API", "Something went wrong...", w)
 }
 
 func MalformedRequest(w http.ResponseWriter, error string) {
@@ -29,7 +29,7 @@ func MalformedRequest(w http.ResponseWriter, error string) {
 }
 
 func NotEnoughPrivileges(w http.ResponseWriter) {
-	dropErr(403, "Forbidden", "student does not have sufficient privileges or is not logged in", "Invalid Request", w)
+	dropErr(403, "Forbidden", "user does not have sufficient privileges or is not logged in", "Invalid Request", w)
 }
 
 func OK(w http.ResponseWriter) {

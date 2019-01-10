@@ -8,6 +8,7 @@ import (
 	"go/build"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const APIURL = "http://127.0.0.1"
@@ -32,13 +33,15 @@ func ExistsString(array []string, entry string) bool {
 }
 
 func GetGOPATH() string {
-	// Get the GOPATH
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
+	// NOTE... This is a hack, as soon as you can find a better option... use it PLEASE!!!
+	gopath := strings.Split(os.Getenv("GOPATH"), string(os.PathListSeparator))
+	if len(gopath) == 0 {
+		gopath = append(gopath, build.Default.GOPATH)
+	} else if gopath[0] == "" {
+		gopath[0] = build.Default.GOPATH
 	}
 
-	return gopath
+	return gopath[0]
 }
 
 /**

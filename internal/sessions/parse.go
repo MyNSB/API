@@ -36,7 +36,7 @@ func ParseSessions(r *http.Request, w http.ResponseWriter) (student.User, error)
 		// Save the sessions
 		session.Save(r, w)
 
-		return mapToUser(currUser), nil
+		return jwtDataToUser(currUser), nil
 	}
 
 	// Tell the student that auth is required again
@@ -82,10 +82,10 @@ func Logout(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func mapToUser(details map[string]interface{}) student.User {
+func jwtDataToUser(details jwt.JWTData) student.User {
 	return student.User{
-		Name:        details["User"].(string),
-		Password:    details["Password"].(string),
-		Permissions: details["Permissions"].([]string),
+		Name:        details.User,
+		Password:    details.Password,
+		Permissions: details.Permissions,
 	}
 }

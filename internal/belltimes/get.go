@@ -46,8 +46,6 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 */
 func getTimes(term string, day string, assembly bool) string {
 	// Load up the hash map
-	Init()
-
 	var json []byte
 
 	// Determine what to return

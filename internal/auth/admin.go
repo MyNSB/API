@@ -133,7 +133,7 @@ func processDetails(details map[string]string, w http.ResponseWriter, r *http.Re
 	user := admin.ToUser(currAdmin)
 
 	// Create the jwtToken
-	jwtToken, err := jwt.GenJWT(userToMap(user))
+	jwtToken, err := jwt.GenJWT(userToJWTData(user))
 	if err != nil {
 		return errors.New("something went wrong")
 	}

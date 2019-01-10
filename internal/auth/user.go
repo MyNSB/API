@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"path/filepath"
 )
 
 // TODO: Refactor spaghetti code
@@ -98,6 +99,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	db.Conn("admin")
 	defer db.DB.Close()
 
+
 	// Retrieve auth details
 	var StudentId string
 	var Password string
@@ -116,7 +118,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	if StatusCode == 200 {
 		// Generate the jwtToken
-		jwtToken, err := jwt.GenJWT(userToMap(student.User{Name: StudentId, Password: Password, Permissions: []string{"student"}}))
+		jwtToken, err := jwt.GenJWT(userToJWTData(student.User{Name: StudentId, Password: Password, Permissions: []string{"student"}}))
 
 		// Create the session
 		sessions.GenerateSession(w, r, jwtToken)
@@ -124,8 +126,21 @@ func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// DATABASE STUFF ===============
 		// Get the spicy details from the details function
 		fnameS, lastName := getStudentDetails(rawHTML)
+
+
+		// Get the GOPATH
+		gopath := util.GetGOPATH()
+		// Set up the timetable
+		timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
+		jsonData, err := timetable.GetJson(timetableDir)
+		if err != nil {
+			panic(err)
+			quickerrors.InternalServerError(w)
+			return
+		}
+
 		// Get the year
-		year, _ := timetable.GetYear(StudentId, "internal/timetable/daemons/Timetables.json")
+		year, _ := timetable.GetYear(StudentId, jsonData)
 		// Parse into our little function
 		pushAndUpdateDB(db.DB, StudentId, fnameS, lastName, year)
 		// END DATABASE ================

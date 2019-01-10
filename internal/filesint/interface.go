@@ -6,28 +6,30 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"mynsb-api/internal/util"
 	"os"
-	"regexp"
+	"path/filepath"
+	"mynsb-api/internal/util"
 )
 
 func GetDirs() map[string]string {
 	gopath := util.GetGOPATH()
 
 	dirs := make(map[string]string)
-	dirs["assets"] = gopath + "/src/mynsb-api/assets"
-	dirs["sensitive"] = gopath + "/src/mynsb-api/sensitive"
-	dirs["database"] = gopath + "/src/mynsb-api/sensitive"
-	dirs["assets"] = gopath + "/src/mynsb-api/assets"
+	dirs["assets"]    = gopath + "/mynsb-api/assets"
+	dirs["sensitive"] = gopath + "/mynsb-api/sensitive"
+	dirs["database"]  = gopath + "/mynsb-api/database"
+	dirs["assets"]    = gopath + "/mynsb-api/assets"
 
 	return dirs
 }
 
 func LoadFile(srcDir string, pathQual string) (*os.File, error) {
 	requestedDir := GetDirs()[srcDir]
+	fullPath := filepath.FromSlash(requestedDir + pathQual)
+
 
 	// Determine if the file exists
-	if _, err := os.Stat(requestedDir + pathQual); err != nil {
+	if _, err := os.Stat(fullPath); err != nil {
 		return nil, errors.New("could not locate file")
 	}
 
@@ -51,19 +53,18 @@ func DataDump(srcDir string, pathQual string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func CreateFile(srcDir string, newFile string) (*os.File, error) {
+func CreateFile(srcDir string, parentDir string, newFile string) (*os.File, error) {
 	// Get the src dir location
 	srcDirLoc := GetDirs()[srcDir]
 
-	// Regex for extracting file information
-	directoryMatch := regexp.MustCompile(`^(.*/)?(?:$|(.+))`)
-	srcInfo := directoryMatch.FindStringSubmatch(newFile)
-
 	// Because os.Create does not create folders for us we need to split the creation into 2 parts, directory creation and file creation
-	if _, err := os.Stat(srcDirLoc + srcInfo[1]); os.IsNotExist(err) {
-		os.Mkdir(srcDirLoc+srcInfo[1], 0777)
+	if _, err := os.Stat(srcDirLoc + parentDir); os.IsNotExist(err) {
+		err := os.MkdirAll(srcDirLoc+parentDir, 0777)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Now actually create the file
-	return os.Create(srcDirLoc + newFile)
+	return os.Create(srcDirLoc + parentDir + "/" + newFile)
 }

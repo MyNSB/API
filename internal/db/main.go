@@ -37,7 +37,7 @@ func (connection *Connection) Connect() error {
 	DB, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		connection.Host, connection.Port, connection.User, connection.Password, connection.DatabaseName))
 	if err != nil {
-		return err
+		fmt.Printf(err.Error())
 	}
 
 	if err = DB.Ping(); err != nil {
@@ -84,8 +84,9 @@ func Conn(user string) error {
 	}
 	// If err != nil why??
 	connection.User = user
+
 	// Attain the student password
-	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/student pass/%s.txt", user)); err == nil {
+	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/user pass/%s.txt", user)); err == nil {
 		connection.Password = string(pwd)
 	} else {
 		return errors.New("could not authenticate")

@@ -21,7 +21,7 @@ type Issue struct {
 // Function merely takes a row and scans it into an article, minimal documentation required
 func (article *Issue) ScanFrom(rows *sql.Rows) {
 	rows.Scan(
-		article.ID,
+		&article.ID,
 		&article.Name,
 		&article.Desc,
 		&article.PublishDate,

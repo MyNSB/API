@@ -12,7 +12,14 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"path/filepath"
 )
+
+
+
+
+
+
 
 /*
 	Data Holders =============
@@ -32,6 +39,14 @@ type TimeTable []Class
 	END Data Holders =============
 */
 
+
+
+
+
+
+
+
+
 /*
 	CORE FUNCTIONS =============================
 */
@@ -48,7 +63,7 @@ func GetSubject(StudentID string, Period string, Day int, filepath string) (Clas
 	var data map[string]interface{}
 	var err error
 
-	if data, err = getJson(filepath); err != nil {
+	if data, err = GetJson(filepath); err != nil {
 		return Class{}, errors.New("could not parse json")
 	}
 
@@ -81,14 +96,16 @@ func GetSubject(StudentID string, Period string, Day int, filepath string) (Clas
 
 }
 
+
+
 /* getYear returns the year a specific student is in, it is only really used during authentication when the student details are stored in the database
 @params;
 	StudentID string
 	filepath string
 */
-func GetYear(StudentID string, filepath string) (string, error) {
+func GetYear(StudentID string, data map[string]interface{}) (string, error) {
 	// Get the timetable for the correct student
-	student, err := RetrieveAll(StudentID, filepath)
+	student, err := RetrieveAll(StudentID, data)
 	if err != nil {
 		return "", err
 	}
@@ -103,22 +120,16 @@ func GetYear(StudentID string, filepath string) (string, error) {
 	return string(numberRegex.Find([]byte(firstSubject))[0]), nil
 }
 
+
+
+
 /* RetrieveAll returns the timetable for a particular student
 @params;
 	StudentID string
 	filepath string
 
 */
-func RetrieveAll(StudentID string, filepath string) (interface{}, error) {
-
-	var data map[string]interface{}
-	var err error
-
-	// Retrieve the timetables
-	if data, err = getJson(filepath); err != nil {
-		return nil, errors.New("could not read timetable dump")
-	}
-
+func RetrieveAll(StudentID string, data map[string]interface{}) (interface{}, error) {
 	// Get the timetables
 	studentTimetables := data["student_timetables"].(map[string]interface{})
 
@@ -130,23 +141,17 @@ func RetrieveAll(StudentID string, filepath string) (interface{}, error) {
 	return nil, errors.New("student or period or day does not exist")
 }
 
+
+
+
 /* GetWholeDay returns the timetable for a student on a given day
 @params;
 	day int
 	filepath string
 */
-func GetWholeDay(day int, studentID string, filepath string) ([]Class, error) {
-
+func GetWholeDay(day int, studentID string, data map[string]interface{}) ([]Class, error) {
 	// timetable type that we start with
 	var timetables []Class
-
-	var data map[string]interface{}
-	var err error
-
-	// Retrieve the timetables
-	if data, err = getJson(filepath); err != nil {
-		return TimeTable{}, errors.New("could not get timetables")
-	}
 
 	studentTimetables := data["student_timetables"].(map[string]interface{})
 	studentsTimetable := studentTimetables[studentID].([]interface{})
@@ -200,6 +205,13 @@ func GetWholeDay(day int, studentID string, filepath string) ([]Class, error) {
 	END CORE FUNCTIONS =============================
 */
 
+
+
+
+
+
+
+
 /*
 	UTIL FUNCTIONS =========================
 */
@@ -219,11 +231,14 @@ func getMaxKey(list map[int]Class) int {
 	return max
 }
 
-/* getJson retrieves the json dump as a map of strings and interfaces
+
+
+
+/* GetJson retrieves the json dump as a map of strings and interfaces
 @params;
 	filepath string
 */
-func getJson(filepath string) (map[string]interface{}, error) {
+func GetJson(filepath string) (map[string]interface{}, error) {
 	// Get the jsonpath
 	jsonPath := filepath
 	// Holders for stuff like json data and errors
@@ -245,6 +260,15 @@ func getJson(filepath string) (map[string]interface{}, error) {
 	return data, nil
 }
 
+
+
+
+
+
+
+
+
+
 /*
 	END UTIL FUNCTIONS =====================
 */
@@ -254,12 +278,15 @@ func getJson(filepath string) (map[string]interface{}, error) {
 func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Get the GOPATH
 	gopath := util.GetGOPATH()
-
-	timetableDir := gopath + "/src/mynsb-api/internal/timetable/daemons/Timetables.json"
-
-	typeReq := ""
-
+	// Set up the timetable
+	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
+	// Read the directory and copy the data into an interface
+	data, err := GetJson(timetableDir)
+	if err != nil {
+		quickerrors.InternalServerError(w)
+	}
 	var StudentID string
+
 
 	allowed, user := sessions.UserIsAllowed(r, w, "student")
 	if !allowed {
@@ -268,61 +295,45 @@ func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	}
 	// Set the student id variable from the student
 	StudentID = user.Name
-
 	// Overview........
 	// Get the student details
 	Period := r.URL.Query().Get("Period")
 	Day := r.URL.Query().Get("Day")
 
 	// Determine the type of request being sent
-	if Period == "" && Day == "" {
-		typeReq = "GetAll"
-	} else if Period == "" && Day != "" {
-		typeReq = "GetDay"
-	}
+	// PLEASE KEEP THIS! I lIKE THIS MEME
+	reqType := map[bool]interface{}{true: 0, false: map[bool]int{true: 1, false: 2}[Period == "" && Day != ""]}[Period == "" && Day == ""] // 0: GetAll, 1: GetDay, 2: GetSubject
+
+	// GLOBAL data
+	var resp interface{}
+	var errGlob error
 
 	// Perform a request given the data we are given
-	if typeReq == "GetSubject" {
-		// Shift through it and read it carefully
-		day, _ := strconv.Atoi(Day)
-		resp, err := GetSubject(StudentID, Period, day, timetableDir)
-		if err != nil {
-			quickerrors.InternalServerError(w)
-			return
-		}
-
-		// Return that
-		jsonResp, _ := json.Marshal(resp)
-		// Return response
-		util.Error(200, "OK", string(jsonResp), "Response", w)
-
-	} else if typeReq == "GetAll" {
-		// Attain data
-		Data, err := RetrieveAll(StudentID, timetableDir)
-		if err != nil {
-			quickerrors.InternalServerError(w)
-			return
-		}
-
-		// Convert to json
-		jsonresp, _ := json.Marshal(Data)
-
-		util.Error(200, "OK", string(jsonresp), "Response", w)
-
-	} else if typeReq == "GetDay" {
+	switch reqType {
+	case 1:
 		// Convert the day
 		day, _ := strconv.Atoi(Day)
-
 		// Attain data
-		Data, err := GetWholeDay(day, StudentID, timetableDir)
-		if err != nil {
-			quickerrors.InternalServerError(w)
-			return
-		}
-
-		// Convert to json
-		jsonresp, _ := json.Marshal(Data)
-
-		util.Error(200, "OK", string(jsonresp), "Response", w)
+		resp, errGlob = GetWholeDay(day, StudentID, data)
+		break
+	case 2:
+		day, _ := strconv.Atoi(Day)
+		// Attain data
+		resp, errGlob = GetSubject(StudentID, Period, day, timetableDir)
+		break
+	default:
+		// Attain data
+		resp, errGlob = RetrieveAll(StudentID, data)
+		break
 	}
+
+	if errGlob != nil {
+		quickerrors.InternalServerError(w)
+		return
+	}
+
+	// Return that
+	jsonResp, _ := json.Marshal(resp)
+	// Return response
+	util.Error(200, "OK", string(jsonResp), "Response", w)
 }

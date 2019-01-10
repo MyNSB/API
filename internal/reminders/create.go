@@ -47,10 +47,11 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	defer db.DB.Close()
 
 	// Get the post vars
-	body := r.PostFormValue("Body")
-	subject := r.PostFormValue("Subject")
-	reminderDateTime := r.PostFormValue("Reminder_Date_Time")
-	tagsTXT := r.PostFormValue("Tags")
+	body := r.FormValue("Body")
+	subject := r.FormValue("Subject")
+	reminderDateTime := r.FormValue("Reminder_Date_Time")
+	tagsTXT := r.FormValue("Tags")
+
 
 	// Get the required fields
 	if util.CompoundIsset(body, reminderDateTime, tagsTXT, subject) {
@@ -92,8 +93,10 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		}
 
 		quickerrors.OK(w)
-	} else {
-		quickerrors.MalformedRequest(w, "Missing Parameters, check the API Documentation")
 		return
 	}
+
+	quickerrors.MalformedRequest(w, "Missing Parameters, check the API Documentation")
+	return
+
 }

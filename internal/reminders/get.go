@@ -24,15 +24,18 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 
 	var container []Reminder
 
+
 	for res.Next() {
 		var headers []byte
 		var studentID int
 		var tags []byte
 
-		var reminder Reminder
+
+		reminder := Reminder{}
 
 		// Scan into the containers
-		res.Scan(&reminder.ReminderId, &studentID, headers, &reminder.Body, &tags, &reminder.ReminderDateTime)
+		res.Scan(&reminder.ReminderId, &studentID, &headers, &reminder.Body, &tags, &reminder.ReminderDateTime)
+
 
 		// Start converting it into the correct types
 		// Headers

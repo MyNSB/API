@@ -7,7 +7,14 @@ import (
 	"time"
 )
 
-// NOTE ========== THE jwt PACKAGE ONLY TAKES AND DEALS IN MAPS AS IT IS MEANT TO BE INDEPENDENT OF THE OTHER PACKAGES
+// NOTE ========== THE jwt PACKAGE ONLY TAKES THE JWTData struct
+
+type JWTData struct {
+	User 	 	string
+	Password 	string
+	Permissions []string
+}
+
 
 // Attain the directory of the sensitive data
 
@@ -17,20 +24,15 @@ import (
 
 		returns string which is the jwt and returns an error if something wrong happened
  **/
-func GenJWT(user map[string]interface{}) (string, error) {
-	// Attain student data from the student parameter
-	var username = user["student"]
-	var password = user["Password"]
-	var permissions = user["Permissions"]
-
+func GenJWT(user JWTData) (string, error) {
 	// Generate a token
 	token := jwt.New(jwt.GetSigningMethod("HS256"))
 
 	// Start the claims
 	claims := token.Claims.(jwt.MapClaims)
-	claims["student"] = username
-	claims["Password"] = password
-	claims["Permissions"] = permissions
+	claims["User"] = user.User
+	claims["Password"] = user.Password
+	claims["Permissions"] = user.Permissions
 	claims["Expires"] = time.Now().Add(time.Hour * 24 * 30)
 
 	// Read key
@@ -55,7 +57,7 @@ func GenJWT(user map[string]interface{}) (string, error) {
 
 		returns student data based on the current jwt
  **/
-func ReadJWT(token string) (map[string]interface{}, error) {
+func ReadJWT(token string) (JWTData, error) {
 	// Decode the token
 
 	var permissions []string
@@ -74,7 +76,7 @@ func ReadJWT(token string) (map[string]interface{}, error) {
 
 	// Check for err
 	if err != nil || !tokenDec.Valid {
-		return make(map[string]interface{}), errors.New("invalid jwt")
+		return JWTData{}, errors.New("invalid jwt")
 	}
 
 	// Get claims
@@ -89,10 +91,11 @@ func ReadJWT(token string) (map[string]interface{}, error) {
 	}
 
 	// Return that shit
-	var user = make(map[string]interface{})
-	user["student"] = claims["student"].(string)
-	user["Password"] = claims["Password"].(string)
-	user["Permissions"] = permissions
+	user := JWTData{
+		User: claims["User"].(string),
+		Password: claims["Password"].(string),
+		Permissions: permissions,
+	}
 
 	return user, nil
 }

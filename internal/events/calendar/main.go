@@ -91,7 +91,6 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Get the get variables from the query
 	dateStart := r.URL.Query().Get("Start")
 	dateEnd := r.URL.Query().Get("End")
-	fmt.Printf("Start: %s, End: %s", dateStart, dateEnd)
 	// If these variables do not exist just spew everything
 	if util.CompoundIsset(dateStart, dateEnd) {
 		resp, status, err := GetBetween(dateStart, dateEnd)
