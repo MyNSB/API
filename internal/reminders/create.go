@@ -54,7 +54,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 
 
 	// Get the required fields
-	if util.CompoundIsset(body, reminderDateTime, tagsTXT, subject) {
+	if util.IsSet(body, reminderDateTime, tagsTXT, subject) {
 		// Decode the tags
 		var tags []string
 		err := json.Unmarshal([]byte(tagsTXT), &tags)

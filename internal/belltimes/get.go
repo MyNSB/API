@@ -88,7 +88,7 @@ func getParams(r *http.Request) (map[string]interface{}, error) {
 	assemblyBool := false
 
 	// Convert to bool
-	if util.Isset(assembly) {
+	if util.NonNull(assembly) {
 		var err error
 		assemblyBool, err = strconv.ParseBool(assembly)
 		if err != nil {

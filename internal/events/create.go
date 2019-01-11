@@ -31,7 +31,7 @@ func Create(user user.User, event Event, db *sql.DB) error {
 		// EVENT EXISTS DETERMINATION ===============================
 		// Check that the event does not exist
 		// Determine the count using the util function
-		if count, _ := util.CheckCount(db, "SELECT * FROM events WHERE event_name = $1 AND event_organiser = $2", event.Name, event.Organiser); count > 0 {
+		if count, _ := util.NumResults(db, "SELECT * FROM events WHERE event_name = $1 AND event_organiser = $2", event.Name, event.Organiser); count > 0 {
 			return errors.New("event already exists")
 		}
 		// EVENT EXISTS DETERMINATION END ===============================
@@ -89,7 +89,7 @@ func getIncomingEvent(r *http.Request, user user.User) (Event, error) {
 	eventShortDesc := r.FormValue("Event_Short_Desc")
 	eventLongDesc := r.FormValue("Event_Long_Desc")
 
-	if util.CompoundIsset(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) {
+	if util.IsSet(eventName, eventEnd, eventLocation, eventOrganiser, eventLongDesc, eventStart, eventShortDesc) {
 		// Attain the image
 
 		// Get the image uploading thing

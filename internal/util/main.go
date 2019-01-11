@@ -53,14 +53,14 @@ func GetGOPATH() string {
 		False: Var doesn't exist
 **/
 
-func Isset(thing string) bool {
+func NonNull(thing string) bool {
 	return thing != ""
 }
 
 // Abstraction of isset
-func CompoundIsset(vars ...string) bool {
+func IsSet(vars ...string) bool {
 	for _, varVal := range vars {
-		if !Isset(varVal) {
+		if !NonNull(varVal) {
 			return false
 		}
 	}
@@ -105,7 +105,7 @@ func SolidError(status int, statusMessage string, body string, title string, w h
 // Function to encrypt error messages for fixing later
 
 // Function to return the number of returned rows it takes an actual query coz go is fucking stupid and will only let you iterate over the fucking set one fucking time!!!!
-func CheckCount(db *sql.DB, query string, args ...interface{}) (int, error) {
+func NumResults(db *sql.DB, query string, args ...interface{}) (int, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return 0, err

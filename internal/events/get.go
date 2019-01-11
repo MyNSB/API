@@ -148,7 +148,7 @@ func determineRequestType(r *http.Request) (string, map[string]string) {
 	typeReq := ""
 	if r.URL.Query().Get("Event_ID") == "" {
 		typeReq = "GetAll"
-	} else if util.CompoundIsset(r.URL.Query().Get("Start"), r.URL.Query().Get("End")) {
+	} else if util.IsSet(r.URL.Query().Get("Start"), r.URL.Query().Get("End")) {
 		typeReq = "Range"
 	} else {
 		typeReq = "Get"

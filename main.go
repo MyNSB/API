@@ -72,9 +72,9 @@ func main() {
 	// END BELL TIMES ================================
 
 	// 4U STUFF =======================================
-	router.GET("/api/v1/4U/Get", _4U.GetIssueHandler) /**/
-	router.POST("/api/v1/4U/Create/Issue", _4U.CreateIssueHandler) /**/
-	router.POST("/api/v1/4U/Create/Article", _4U.CreateArticleHandler) /**/
+	router.GET("/api/v1/4U/Get", _4U.IssueRetrievalHandler)              /**/
+	router.POST("/api/v1/4U/Create/Issue", _4U.IssueCreationHandler)     /**/
+	router.POST("/api/v1/4U/Create/Article", _4U.ArticleCreationHandler) /**/
 	// END 4U STUFF ===================================
 
 	// REMINDERS ======================================

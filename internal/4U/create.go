@@ -18,59 +18,46 @@ import (
 )
 
 
-/*	CreateIssue takes an issue and pushes that into the database it also saves the incoming image for that article returns an error on a failure
-	@params;
-		article FourU.Issue
-		db *sql.db
-*/
-func CreateIssue(issue Issue, db *sql.DB) error {
-	// Check that the issue does not currently exist in the database
-	if count, _ := util.CheckCount(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", issue.Name, issue.Link, issue.TypePost); count > 0 {
+// INSERTION FUNCTIONS
+
+// issue.insertIntoDB takes an issue of the 4U Paper, checks weather if it already exists within the database and inserts it into the DB if it doesn't
+func (issue Issue) insertIntoDB(db *sql.DB) error {
+	// Determine if the issue has already been entered into the DB
+	numInstances, _ := util.NumResults(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", issue.Name, issue.Link, issue.TypePost);
+	if numInstances != 0 {
 		return errors.New("issue already exists")
 	}
 
-	// Hash the issue link for diversity
-	sha := util.HashString(issue.Link)
+	// Copy the image attached with the issue into a folder stored onto the server
 	// Save the issue's image
-	err := createImage(issue, sha)
+	imageLocation, err := saveImage(issue)
 	if err != nil {
 		return err
 	}
 
-	// Set the image url of the issue
-	issue.ImageUrl = fmt.Sprintf("%s/api/v1/assets/4U/%s/%s/%s/%s", util.APIURL, issue.TypePost, sha, issue.Name, issue.PictureHeader.Filename)
+	// Set the Issue's image URL to be the location of the saved image on our server
+	issue.ImageUrl = fmt.Sprintf("%s/api/v1/assets/%s", util.APIURL, imageLocation)
 
-	// Finally push everything into the database
+	// Push everything into the DB
 	db.Exec("INSERT INTO four_u (article_name, article_desc, article_publish_date, article_image_url, link, type) VALUES($1, $2, $3::DATE, $4, $5, $6)",
 		issue.Name, issue.Desc, issue.PublishDate, issue.ImageUrl, issue.Link, issue.TypePost)
 
-	// Return no error
 	return nil
 }
 
 
-
-/* CreateArticle appends a new article to the 4U paper
-@params;
-	article FourU.Issue
-	db *sql.db
-*/
-func CreateArticle(parent Issue, article Article, db *sql.DB) error {
-	// Ensure that the parent actually has an id
-	if parent.ID == 0 {
-		return errors.New("article is missing an ID")
-	}
-
-	// Check that the parent does not exist
-	if count, _ := util.CheckCount(db, "SELECT * FROM four_u_articles WHERE four_u_article = $1 AND four_u_article_name = $2", parent.ID, article.Name); count > 0 {
-		// Looks like the parent already exists
+// article.insertIntoDB inserts a "4U Article" into the DB and like issue.insertIntoDB it also checks weather is already exists
+func (article Article) insertIntoDB(parent Issue, db *sql.DB) error {
+	// Determine if the article has already been entered into the DB
+	numInstances, _ := util.NumResults(db, "SELECT * FROM four_u_articles WHERE four_u_article = $1 AND four_u_article_name = $2", parent.ID, article.Name)
+	if numInstances != 0 {
 		return errors.New("article already exists")
 	}
 
-	// Insert teh parent normally
+	// Insert into the DB, if there is a failure that generally implies that the parent was invalid
 	if _, err := db.Exec("INSERT INTO four_u_articles (four_u_article, page_start, four_u_article_name, four_u_article_desc) VALUES ($1, $2, $3, $4)",
 		parent.ID, article.Page, article.Name, article.Desc); err != nil {
-		return errors.New("unable to create new article within issue")
+		return errors.New("unable to insert article into DB, most likely because the parent provided did not exist")
 	}
 
 	return nil
@@ -85,100 +72,88 @@ func CreateArticle(parent Issue, article Article, db *sql.DB) error {
 
 
 
-/*
-	@ UTIL FUNCTIONS ==================================================
-*/
-/*
-	createImage takes an article and its save dir and creates the image that it requires
-	@params;
-		article FourU.Issue
-		imageSaveDir string
 
-*/
-func createImage(issue Issue, imageSaveDir string) error {
-	// Create the issue for the 4U directory
+
+// UTILITY FUNCTIONS
+
+// saveImage takes an issue of the 4U Paper and saves the image associated with it to disk
+func saveImage(issue Issue) (string, error) {
+	// We take the string's hash to be the directory we will be using to save the issue
+	// The reason why we are hashing the link is as they will generally be unique from issue to issue and that reduces the number of possible hash collisions
+	imageSaveDir := util.HashString(issue.Link)
+
+	// Create the directory that will be used to save the image
 	fourUDir := fmt.Sprintf("/4U/%s/%s/%s", issue.TypePost, imageSaveDir, issue.Name)
 	file, err := filesint.CreateFile("assets", fourUDir, issue.PictureHeader.Filename)
-
 	if err != nil {
 		fmt.Printf("%s", err.Error())
-		return errors.New("could not create image")
+		return "", errors.New("could not create image")
 	}
 
-	// Copy the actual image into the file
+	// Copy the actual image into the file object
 	io.Copy(file, issue.Picture)
 
-	return nil
+	return fourUDir, nil
 }
 
 
-/*
-	getIncomingIssue attains the incoming article from the request and returns an article and/or an error
-	@params;
-		r *http.Request
-
-*/
+// getIncomingIssue parses the issue being sent by the user via HTTP into an actual issue object
 func getIncomingIssue(r *http.Request) (Issue, error) {
-	// Get the issue details
+	r.ParseMultipartForm(1000000)
+
 	issueName := r.FormValue("Post_Name")
 	issueDesc := r.FormValue("Post_Desc")
 	issuuLink := r.FormValue("Link") // <--- Spelt this way on purpose
 
-	// Issue is invalid so throw an error
-	if !(util.CompoundIsset(issueName, issueDesc, issuuLink)) {
-		return Issue{}, errors.New("invalid issue")
+	if !(util.IsSet(issueName, issueDesc, issuuLink)) {
+		return Issue{}, errors.New("not all parameters have been provided")
 	}
 
-	// Attain the pictures from multipart
+	// Read the attached image using the multipart package
 	f, h, err := r.FormFile("Caption_Image")
 	if err != nil {
 		return Issue{}, errors.New("caption image does not exist")
 	}
 
-	// Create temporary issue
-	issue := Issue{
+	// Return the parsed issue
+	return Issue{
 		Picture:       f,
 		PictureHeader: h,
 		Name:          issueName,
 		Desc:          issueDesc,
 		Link:          issuuLink,
+		PublishDate:   time.Now(),
 		TypePost:      "Issue",
-	}
-	// Set the publish date
-	issue.PublishDate = time.Now()
-	return issue, nil
+	}, nil
 }
 
+
+// getIncomingArticle parses the article being sent by the user via HTTP into an actual article object
 func getIncomingArticle(r *http.Request) (Article, error) {
-	// Get the article details
+	r.ParseMultipartForm(1000000)
+
 	articleName := r.Form.Get("Article_Name")
 	parentIssueIDRaw := r.Form.Get("Parent_ID")
 	pageStartRaw := r.Form.Get("Article_Page")
 	articleDesc := r.Form.Get("Article_Desc")
 
-	// Determine if everything is set
-	if !(util.CompoundIsset(articleDesc, articleName, parentIssueIDRaw, pageStartRaw)) {
-		return Article{}, errors.New("invalid article")
+	if !(util.IsSet(articleDesc, articleName, parentIssueIDRaw, pageStartRaw)) {
+		return Article{}, errors.New("not all parameters have been provided")
 	}
 
-	// Convert some stuff
+	// Convert the text provided by the user into integers
 	parentID, _ := strconv.ParseInt(parentIssueIDRaw, 10, 64)
 	pageStart, _ := strconv.ParseInt(pageStartRaw, 10, 64)
 
-	// Construct the article
-	article := Article{
+	// Return the parsed article
+	return Article{
 		ParentID: parentID,
 		Page:     pageStart,
 		Name:     articleName,
 		Desc:     articleDesc,
-	}
-
-	return article, nil
+	}, nil
 }
 
-/*
-	@ END UTIL FUNCTIONS ==================================================
-*/
 
 
 
@@ -190,20 +165,13 @@ func getIncomingArticle(r *http.Request) (Article, error) {
 
 
 
+// HTTP HANDLERS
 
+// IssueCreationHandler creates 4U issues
+func IssueCreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-
-
-// Http handler for four u request publications
-/*
-	Handler's have minimal documentation
-*/
-
-// CreateIssueHandler creates 4U issues
-func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Connect to database
 	db.Conn("admin")
-	// Close database at the end
 	defer db.DB.Close()
 
 	// Determine if the user is allowed here and if not force them to leave
@@ -213,19 +181,15 @@ func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		return
 	}
 
-
-	// Parse the incoming form
-	r.ParseMultipartForm(1000000)
-
-	// Get the incoming article
+	// Get the incoming issue
 	issue, err := getIncomingIssue(r)
 	if err != nil {
 		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
 		return
 	}
 
-	// Push the article into the database
-	err = CreateIssue(issue, db.DB)
+	// Push the issue into the database
+	err = issue.insertIntoDB(db.DB)
 	if err != nil {
 		panic(err)
 		quickerrors.MalformedRequest(w, "4U Issue/Issue already exists")
@@ -235,26 +199,36 @@ func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	quickerrors.OK(w)
 }
 
-// CreateArticleHandler is a HTTP handler for article creation
-func CreateArticleHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Connect to database
+// ArticleCreationHandler is a HTTP handler for article creation
+func ArticleCreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	// Connect to database as an admin
 	db.Conn("admin")
-	// Close database at the end
 	defer db.DB.Close()
 
-	// Parse the incoming article
-	article, err := getIncomingArticle(r)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
-	}
-
-	// Finally push the new article
-	err = CreateArticle(Issue{ID: article.ParentID}, article, db.DB)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "Looks like that article already exists")
+	// Determine if the user is allowed here and if not force them to leave
+	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
+	if !allowed {
+		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
+	// Attain the incoming article
+	article, err := getIncomingArticle(r)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "You are missing fields, please check the API documentation")
+		return
+	}
+
+	// Push the article into the database
+	parentIssue := Issue{ID: article.ParentID}
+	err = article.insertIntoDB(parentIssue, db.DB)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "Looks like that article already exists in our DB")
+		return
+	}
+
+	// All Clear :)
 	quickerrors.OK(w)
 }

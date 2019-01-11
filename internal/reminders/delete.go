@@ -45,7 +45,7 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	reminderIDTXT := r.Form.Get("Reminder_ID")
 
 	// Determine if the reminder id is really set or not
-	if util.Isset(reminderIDTXT) {
+	if util.NonNull(reminderIDTXT) {
 
 		// Begin the conversion from text to int for all the ids
 		studentID, _ := strconv.Atoi(user.Name)

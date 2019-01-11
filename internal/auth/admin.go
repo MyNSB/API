@@ -61,7 +61,7 @@ func Auth(Username, Password string, db *sql.DB) (user.User, error) {
 	passwordHash := util.HashString(Password)
 
 	// Determine if currAdmin exists in database
-	if count, err := util.CheckCount(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
+	if count, err := util.NumResults(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
 		return user.User{}, errors.New("currAdmin does not exist")
 	}
 

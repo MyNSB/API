@@ -74,7 +74,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		startTime := r.URL.Query().Get("Start_Time")
 		endTime := r.URL.Query().Get("End_Time")
 
-		if util.CompoundIsset(startTime, endTime) {
+		if util.IsSet(startTime, endTime) {
 
 			// Start converting the dates to the correct format
 			startTimeDate, err1 := fmtdate.Parse("DD-MM-YYYY", startTime)

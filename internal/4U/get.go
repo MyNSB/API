@@ -11,147 +11,136 @@ import (
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/util"
 	"net/http"
+	"time"
 )
 
-// Http handler for four u article requests
-/*
-	Handler's have minimal documentation
-*/
-// GetIssueHandler deals with a request for a specific 4U Issue
-func GetIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Start up database
-	db.Conn("user")
-	// Close the database at the end
-	defer db.DB.Close()
+// RETRIEVAL FUNCTIONS
 
-	// Determine the request type for the incoming request
-	requestType, params := determineRequestType(r)
-
-	// Perform the request in regards to parameters
-	switch {
-
-	case requestType: // Request type = all {check function documentation}
-		// Perform the get all function
-		articles := GetAll(db.DB)
-		// Encode result to json
-		bytes, _ := json.Marshal(articles)
-
-		// Encode result and return it to the user
-		util.Error(200, "OK", string(bytes), "Response", w)
-
-	default: // Request type = between {check function documentation}
-
-		// Perform it
-		res, err := GetBetween(params, db.DB)
-		if err != nil {
-			quickerrors.InternalServerError(w)
-			return
-		}
-
-		// encode and return the result
-		bytes, _ := json.Marshal(res)
-		util.Error(200, "Ok", string(bytes), "Response", w)
-	}
+// getAll returns all 4U issues currently in our four_u table
+func getAll(db *sql.DB) []Issue {
+	issues, _ := performRequest(db, "SELECT * FROM four_u")
+	return issues
 }
 
-// Functions to retrieve articles ==================
-/*
-	GetAll returns all 4U articles currently in the database, once mynsb grows this will have to shrink to the past year but for now it can stay as the entire db
-	@params;
-		db *sql.db
-*/
-func GetAll(db *sql.DB) []Issue {
-	issue, _ := performRequest(db, "SELECT * FROM four_u")
-	return issue
-}
 
-/*
-	GetBetween returns all function between specified times
-	@params;
-		times map[string]string
-		db *sql.db
-*/
-func GetBetween(times map[string]string, db *sql.DB) ([]Issue, error) {
-	// Convert the start and end to actual time values
-	// Convert into dates
-	start, err := fmtdate.Parse("DD-MM-YYYY", times["start"])
-	if err != nil {
-		return []Issue{}, errors.New("invalid date format")
-	}
+// getBetween takes two times and returns all 4U articles published between those two times
+func getBetween(times map[string]string, db *sql.DB) ([]Issue, error) {
+	// Parse the dates
+	start, parseErrOne := parseDate(times["start"])
+	end, parseErrTwo := parseDate(times["end"])
 
-	end, err := fmtdate.Parse("DD-MM-YYYY", times["end"])
-	if err != nil {
-		return []Issue{}, errors.New("invalid date format")
+	if parseErrOne != nil || parseErrTwo != nil {
+		return []Issue{}, errors.New("could not parse date")
 	}
 
 	return performRequest(db, "SELECT * FROM four_u WHERE article_publish_date BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP", start, end)
 }
 
-// ================================
 
-/*
-	@ UTIL FUNCTIONS ==================================================
-*/
-/*
-	determineRequestType determines the type of request for the incoming http.request, true for all false for between, it also returns parameters
-	@params;
-		r *http.Request
-*/
-func determineRequestType(r *http.Request) (bool, map[string]string) {
-	// Request Type
-	var typeReq bool
 
-	startTXT := r.URL.Query().Get("Start")
-	endTXT := r.URL.Query().Get("End")
+
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// determineRequestType takes the sets of params fed to us by the user and determines what type of request they are sending
+func determineRequestType(params map[string]string) string {
 
 	// Determine type of request based on parsed parameters
-	if util.CompoundIsset(startTXT, endTXT) {
-		typeReq = false
-	} else {
-		typeReq = true
+	if util.IsSet(params["start"], params["end"]) {
+		return "getBetween"
 	}
 
-	// Map to be returned
-	toReturn := make(map[string]string)
-	toReturn["start"] = startTXT
-	toReturn["end"] = endTXT
-
-	return typeReq, toReturn
+	return "getAll"
 }
 
-/*
-	performRequest performs a request given a query and some arguments it returns an array or articles and a possible error
-	@params;
-		db *sql.db
-		query string
-		args ...interface{}
-*/
+
+// performRequest takes a simple request, parses it into an array and returns it
 func performRequest(db *sql.DB, query string, args ...interface{}) ([]Issue, error) {
 	// Array that will be returned
 	var result []Issue
 
-	// Get everything
+	// Perform the request
 	res, err := db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
-	// Close res at the end
 	defer res.Close()
 
-	// Iterate over result set
 	for res.Next() {
 		article := Issue{}
-		// Scan the rows into the article
-		article.ScanFrom(res)
+		article.ReplaceWith(res)
 
-		// Append article to array to be returned
 		result = append(result, article)
 	}
 
 	return result, nil
 }
 
-/*
-	@ END UTIL FUNCTIONS ==================================================
-*/
+
+// parseDate takes a date as a string and parses it based off a specific format
+func parseDate(date string) (time.Time, error) {
+	return fmtdate.Parse("DD-MM-YYYY", date)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// IssueRetrievalHandler deals with a request for a specific 4U Issue based off the parameters provided by the user
+func IssueRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	// Start up database
+	db.Conn("user")
+	defer db.DB.Close()
+
+	// Params sent to us by the user
+	params := map[string]string{
+		"start": r.URL.Query().Get("Start"),
+		"end": r.URL.Query().Get("End"),
+	}
+
+	// Determine the request type for the incoming request
+	requestType := determineRequestType(params)
+
+	// Perform the request in regards to parameters
+	switch requestType {
+
+	case "getAll": // Request type = all
+
+		// perform the request
+		articles := getAll(db.DB)
+		bytes, _ := json.Marshal(articles)
+		util.Error(200, "OK", string(bytes), "Response", w)
+		break
+
+	default: // Request type = between
+
+		// perform the request
+		res, err := getBetween(params, db.DB)
+		if err != nil {
+			quickerrors.InternalServerError(w)
+			return
+		}
+		bytes, _ := json.Marshal(res)
+		util.Error(200, "Ok", string(bytes), "Response", w)
+		break
+
+	}
+}
