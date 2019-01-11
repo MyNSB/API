@@ -8,13 +8,13 @@ import (
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"time"
 )
 
-func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User) []Reminder {
+func getReminders(db *sql.DB, start time.Time, end time.Time, user user.User) []Reminder {
 	res, err := db.Query("SELECT * FROM reminders WHERE reminder_date_time BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP AND student_id = $3 ORDER BY reminder_date_time ASC",
 		start, end, user.Name)
 
@@ -34,7 +34,7 @@ func getReminders(db *sql.DB, start time.Time, end time.Time, user student.User)
 		reminder := Reminder{}
 
 		// Scan into the containers
-		res.Scan(&reminder.ReminderId, &studentID, &headers, &reminder.Body, &tags, &reminder.ReminderDateTime)
+		res.Scan(&reminder.ID, &studentID, &headers, &reminder.Body, &tags, &reminder.DateTime)
 
 
 		// Start converting it into the correct types
@@ -60,7 +60,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	db.Conn("student")
+	db.Conn("user")
 
 	// Close that database at the end
 	defer db.DB.Close()

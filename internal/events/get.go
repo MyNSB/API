@@ -18,7 +18,7 @@ import (
 // HTTP handler for attaining all events
 func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Connect to the database
-	db.Conn("student")
+	db.Conn("user")
 	// Close the request at the end
 	defer db.DB.Close()
 
@@ -38,7 +38,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		// Get the event id
 		eventId, _ := strconv.Atoi(params["eventID"])
 		// Perform the function
-		json, _ := Get(Event{EventID: int64(eventId)}, db.DB)
+		json, _ := Get(Event{ID: int64(eventId)}, db.DB)
 		// Encode the response
 		jsonResp, _ = json2.Marshal(json)
 	case "Range":
@@ -63,7 +63,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 */
 func Get(event Event, db *sql.DB) (Event, error) {
 	// Extract necessary details
-	eventID := event.EventID
+	eventID := event.ID
 	eventArr, err := performRequest(db, "SELECT * FROM events WHERE event_id = $1", eventID)
 	return eventArr[0], err
 }

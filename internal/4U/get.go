@@ -21,7 +21,7 @@ import (
 func GetIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Start up database
-	db.Conn("student")
+	db.Conn("user")
 	// Close the database at the end
 	defer db.DB.Close()
 
@@ -37,7 +37,7 @@ func GetIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		// Encode result to json
 		bytes, _ := json.Marshal(articles)
 
-		// Encode result and return it to the student
+		// Encode result and return it to the user
 		util.Error(200, "OK", string(bytes), "Response", w)
 
 	default: // Request type = between {check function documentation}

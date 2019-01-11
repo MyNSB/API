@@ -11,7 +11,7 @@ import (
 	"mynsb-api/internal/jwt"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/timetable"
 	"mynsb-api/internal/util"
 	"net/http"
@@ -38,7 +38,7 @@ func getStudentDetails(rawHTML string) (string, string) {
 
 func pushAndUpdateDB(db *sql.DB, studentID string, fName string, lName string, studentYear string) {
 
-	// Convert student id to integer
+	// Convert user id to integer
 	studentIDInt, _ := strconv.Atoi(studentID)
 	studentYearInt, _ := strconv.Atoi(studentYear)
 
@@ -118,7 +118,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	if StatusCode == 200 {
 		// Generate the jwtToken
-		jwtToken, err := jwt.GenJWT(userToJWTData(student.User{Name: StudentId, Password: Password, Permissions: []string{"student"}}))
+		jwtToken, err := jwt.GenJWT(userToJWTData(user.User{Name: StudentId, Password: Password, Permissions: []string{"user"}}))
 
 		// Create the session
 		sessions.GenerateSession(w, r, jwtToken)

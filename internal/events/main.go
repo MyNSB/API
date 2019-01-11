@@ -7,28 +7,28 @@ import (
 )
 
 type Event struct {
-	EventName       string
-	EventID         int64
-	EventStart      time.Time
-	EventEnd        time.Time
-	EventLocation   string
-	EventOrganiser  string
-	EventShortDesc  string
-	EventLongDesc   string
-	Picture         multipart.File
-	PictureHeader   *multipart.FileHeader
-	EventPictureURL string
+	ID            int64
+	Name          string
+	Start         time.Time
+	End           time.Time
+	Location      string
+	Organiser     string
+	ShortDesc     string
+	LongDesc      string
+	Picture       multipart.File
+	PictureHeader *multipart.FileHeader
+	PictureURL    string
 }
 
 func (event *Event) ScanFrom(rows *sql.Rows) {
 	rows.Scan(
-		&event.EventID,
-		&event.EventName,
-		&event.EventStart,
-		&event.EventEnd,
-		&event.EventLocation,
-		&event.EventOrganiser,
-		&event.EventShortDesc,
-		&event.EventLongDesc,
-		&event.EventPictureURL)
+		&event.ID,
+		&event.Name,
+		&event.Start,
+		&event.End,
+		&event.Location,
+		&event.Organiser,
+		&event.ShortDesc,
+		&event.LongDesc,
+		&event.PictureURL)
 }

@@ -80,10 +80,10 @@ func sendRequest(url string) (string, error) {
 // Http handler for calendar thingy ma bop
 func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Get the currently logged in student
+	// Get the currently logged in user
 
 	user, err := sessions.ParseSessions(r, w)
-	if err != nil || !util.ExistsString(user.Permissions, "student") {
+	if err != nil || !util.ExistsString(user.Permissions, "user") {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}

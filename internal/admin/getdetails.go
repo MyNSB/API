@@ -6,7 +6,7 @@ import (
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 )
@@ -16,13 +16,13 @@ type details struct {
 	Permissions string
 }
 
-// Retrieves the details for an incoming student
+// Retrieves the details for an incoming user
 /*
 	http handlers need minimal documentation
 */
 func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if the student is allowed here
+	// Determine if the user is allowed here
 	allowed, user := sessions.UserIsAllowed(r, w, "admin")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
@@ -30,7 +30,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	// Connect to Database
-	db.Conn("student")
+	db.Conn("user")
 	defer db.DB.Close()
 
 	// Get the details
@@ -42,11 +42,11 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	@ UTIL FUNCTIONS ==================================================
 */
 /*
-	getDetails takes a student and returns the details for that student
+	getDetails takes a user and returns the details for that user
 	@params;
-		student student.student
+		user user.user
 */
-func getDetails(user student.User) string {
+func getDetails(user user.User) string {
 	rows, _ := db.DB.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
 	defer rows.Close()
 

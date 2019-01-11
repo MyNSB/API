@@ -5,7 +5,7 @@ import (
 	"github.com/gorilla/sessions"
 	"mynsb-api/internal/filesint"
 	"mynsb-api/internal/jwt"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"time"
@@ -17,10 +17,10 @@ var key, _ = filesint.DataDump("sensitive", "/keys/priv.txt")
 // USe it to set up the cookie store
 var store = sessions.NewCookieStore(key)
 
-// Function for parsing sessions and generating a student from those sessions
-func ParseSessions(r *http.Request, w http.ResponseWriter) (student.User, error) {
+// Function for parsing sessions and generating a user from those sessions
+func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
 	// Attain session
-	session, _ := store.Get(r, "student-data")
+	session, _ := store.Get(r, "user-data")
 
 	// Get the expiry date
 	if !(session.Values["token"] == nil) {
@@ -28,7 +28,7 @@ func ParseSessions(r *http.Request, w http.ResponseWriter) (student.User, error)
 		// Parse jwt
 		currUser, err := jwt.ReadJWT(session.Values["token"].(string))
 		if err != nil {
-			return student.User{}, err
+			return user.User{}, err
 		}
 
 		// Renew the session
@@ -39,13 +39,13 @@ func ParseSessions(r *http.Request, w http.ResponseWriter) (student.User, error)
 		return jwtDataToUser(currUser), nil
 	}
 
-	// Tell the student that auth is required again
-	return student.User{}, errors.New("session is invalid, please authenticate again")
+	// Tell the user that auth is required again
+	return user.User{}, errors.New("session is invalid, please authenticate again")
 }
 
 func GenerateSession(w http.ResponseWriter, r *http.Request, token string) error {
 	// Create the session
-	session, err := store.New(r, "student-data")
+	session, err := store.New(r, "user-data")
 	if err != nil {
 		return err
 	}
@@ -58,10 +58,10 @@ func GenerateSession(w http.ResponseWriter, r *http.Request, token string) error
 	return nil
 }
 
-func UserIsAllowed(r *http.Request, w http.ResponseWriter, requirements ...string) (bool, student.User) {
+func UserIsAllowed(r *http.Request, w http.ResponseWriter, requirements ...string) (bool, user.User) {
 	currUser, err := ParseSessions(r, w)
 	if err != nil {
-		return false, student.User{}
+		return false, user.User{}
 	}
 	return util.IsSubset(requirements, currUser.Permissions), currUser
 }
@@ -69,7 +69,7 @@ func UserIsAllowed(r *http.Request, w http.ResponseWriter, requirements ...strin
 func Logout(w http.ResponseWriter, r *http.Request) error {
 
 	// Attain session
-	sess, _ := store.Get(r, "student-data")
+	sess, _ := store.Get(r, "user-data")
 
 	if sess.Values["token"] == nil {
 		return errors.New("hmph")
@@ -82,8 +82,8 @@ func Logout(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func jwtDataToUser(details jwt.JWTData) student.User {
-	return student.User{
+func jwtDataToUser(details jwt.JWTData) user.User {
+	return user.User{
 		Name:        details.User,
 		Password:    details.Password,
 		Permissions: details.Permissions,

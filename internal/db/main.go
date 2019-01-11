@@ -77,7 +77,7 @@ func getConnection() (Connection, error) {
 // Conn function for connection to database
 // sensitiveLoc should look something like
 func Conn(user string) error {
-	// Connect to database as student
+	// Connect to database as user
 	connection, err := getConnection()
 	if err != nil {
 		panic(err)
@@ -85,7 +85,7 @@ func Conn(user string) error {
 	// If err != nil why??
 	connection.User = user
 
-	// Attain the student password
+	// Attain the user password
 	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/user pass/%s.txt", user)); err == nil {
 		connection.Password = string(pwd)
 	} else {

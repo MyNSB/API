@@ -206,7 +206,7 @@ func CreateIssueHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 	// Close database at the end
 	defer db.DB.Close()
 
-	// Determine if the student is allowed here and if not force them to leave
+	// Determine if the user is allowed here and if not force them to leave
 	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)

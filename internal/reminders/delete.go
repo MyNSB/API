@@ -15,7 +15,7 @@ import (
 func deleteEvent(db *sql.DB, reminderId, studentID int) error {
 	_, err := db.Exec("DELETE FROM reminders WHERE reminder_id = $1 AND student_id = $2", reminderId, studentID)
 	if err != nil {
-		return errors.New("student does not own this reminder")
+		return errors.New("user does not own this reminder")
 	}
 
 	return nil
@@ -36,7 +36,7 @@ func DeleteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	defer db.DB.Close()
 
 	user, err := sessions.ParseSessions(r, w)
-	if err != nil || !util.ExistsString(user.Permissions, "student") {
+	if err != nil || !util.ExistsString(user.Permissions, "user") {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}

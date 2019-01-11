@@ -7,14 +7,14 @@ import (
 )
 
 func TestJWT(t *testing.T) {
-	// Create a test student
+	// Create a test user
 	user := User.User{
 		Name:        "TestUser",
 		Password:    "TestPWD",
 		Permissions: []string{"Tester"},
 	}
 
-	// Create a jwt from this student
+	// Create a jwt from this user
 	jwt, err := JWT.GenJWT(user, "key.txt")
 	// Check for error
 	if err != nil {

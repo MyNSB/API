@@ -12,6 +12,7 @@ import (
 	"mynsb-api/internal/sessions"
 	"mynsb-api/internal/util"
 	"net/http"
+	"mynsb-api/internal/user"
 )
 
 // Http handler for admin authentication
@@ -20,7 +21,7 @@ import (
 */
 func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if a student is already logged in
+	// Determine if a user is already logged in
 	_, err := sessions.ParseSessions(r, w)
 	if err == nil {
 		quickerrors.AlreadyLoggedIn(w)
@@ -28,7 +29,7 @@ func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	// Connect to database
-	db.Conn("student")
+	db.Conn("user")
 	defer db.DB.Close()
 
 	// Get the details for the incoming request
@@ -56,28 +57,28 @@ func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Password string
 		db *sql.db
 */
-func Auth(Username, Password string, db *sql.DB) (admin.Admin, error) {
+func Auth(Username, Password string, db *sql.DB) (user.User, error) {
 	passwordHash := util.HashString(Password)
 
 	// Determine if currAdmin exists in database
 	if count, err := util.CheckCount(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
-		return admin.Admin{}, errors.New("currAdmin does not exist")
+		return user.User{}, errors.New("currAdmin does not exist")
 	}
 
 	// Finally query the database for the currAdmin's details
 	rows, _ := db.Query("SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
 	defer rows.Close()
 
-	// Actual student
+	// Actual user
 	// Construct the currAdmin
-	currAdmin := admin.Admin{
+	currAdmin := user.User{
 		Name:     Username,
 		Password: Password,
 	}
 
 	// Scan the currAdmin details into the currAdmin variable
 	for rows.Next() {
-		currAdmin.ScanFrom(rows)
+		currAdmin.AdminScanFrom(rows)
 	}
 
 	return currAdmin, nil
@@ -115,8 +116,8 @@ func getAuthDetails(r *http.Request) (map[string]string, error) {
 }
 
 /*
-	processDetails takes the details map and determines if they really are an admin, it then converts that admin to a student, calculates
-	the jwt representation of it generates session details for the student requesting to authenticate and then exists, phew that's a lot
+	processDetails takes the details map and determines if they really are an admin, it then converts that admin to a user, calculates
+	the jwt representation of it generates session details for the user requesting to authenticate and then exists, phew that's a lot
 	@params;
 		details map[string]string
 		w http.ResponseWriter
@@ -129,11 +130,9 @@ func processDetails(details map[string]string, w http.ResponseWriter, r *http.Re
 		return errors.New("invalid admin details")
 	}
 
-	// Convert the admin to a student so a jwtToken can be generated
-	user := admin.ToUser(currAdmin)
 
 	// Create the jwtToken
-	jwtToken, err := jwt.GenJWT(userToJWTData(user))
+	jwtToken, err := jwt.GenJWT(userToJWTData(currAdmin))
 	if err != nil {
 		return errors.New("something went wrong")
 	}

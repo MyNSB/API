@@ -50,7 +50,7 @@ type TimeTable []Class
 /*
 	CORE FUNCTIONS =============================
 */
-/* GetSubject returns the subject that the student has requested through a given period and a given day
+/* GetSubject returns the subject that the user has requested through a given period and a given day
  		@params;
 			StudentID string
 			Period string,
@@ -92,19 +92,19 @@ func GetSubject(StudentID string, Period string, Day int, filepath string) (Clas
 	}
 
 	// Return error if it does not exist
-	return Class{}, errors.New("student id or period or day does not exist")
+	return Class{}, errors.New("user id or period or day does not exist")
 
 }
 
 
 
-/* getYear returns the year a specific student is in, it is only really used during authentication when the student details are stored in the database
+/* getYear returns the year a specific user is in, it is only really used during authentication when the user details are stored in the database
 @params;
 	StudentID string
 	filepath string
 */
 func GetYear(StudentID string, data map[string]interface{}) (string, error) {
-	// Get the timetable for the correct student
+	// Get the timetable for the correct user
 	student, err := RetrieveAll(StudentID, data)
 	if err != nil {
 		return "", err
@@ -123,7 +123,7 @@ func GetYear(StudentID string, data map[string]interface{}) (string, error) {
 
 
 
-/* RetrieveAll returns the timetable for a particular student
+/* RetrieveAll returns the timetable for a particular user
 @params;
 	StudentID string
 	filepath string
@@ -133,18 +133,18 @@ func RetrieveAll(StudentID string, data map[string]interface{}) (interface{}, er
 	// Get the timetables
 	studentTimetables := data["student_timetables"].(map[string]interface{})
 
-	// Get the currently logged in student's timetable through their student ID
+	// Get the currently logged in user's timetable through their user ID
 	if _, ok := studentTimetables[StudentID]; ok {
 		return studentTimetables[StudentID], nil
 	}
 
-	return nil, errors.New("student or period or day does not exist")
+	return nil, errors.New("user or period or day does not exist")
 }
 
 
 
 
-/* GetWholeDay returns the timetable for a student on a given day
+/* GetWholeDay returns the timetable for a user on a given day
 @params;
 	day int
 	filepath string
@@ -288,15 +288,15 @@ func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	var StudentID string
 
 
-	allowed, user := sessions.UserIsAllowed(r, w, "student")
+	allowed, user := sessions.UserIsAllowed(r, w, "user")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
-	// Set the student id variable from the student
+	// Set the user id variable from the user
 	StudentID = user.Name
 	// Overview........
-	// Get the student details
+	// Get the user details
 	Period := r.URL.Query().Get("Period")
 	Day := r.URL.Query().Get("Day")
 

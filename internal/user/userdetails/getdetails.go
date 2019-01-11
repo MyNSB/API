@@ -7,7 +7,7 @@ import (
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"strconv"
@@ -21,8 +21,8 @@ type details struct {
 	Year      uint8
 }
 
-func getDetails(db *sql.DB, user student.User) string {
-	// Convert the student's name into an integer
+func getDetails(db *sql.DB, user user.User) string {
+	// Convert the user's name into an integer
 	studentID, _ := strconv.Atoi(user.Name)
 
 	rows, _ := db.Query("SELECT * FROM students WHERE student_id = $1", studentID)
@@ -44,12 +44,12 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, err := sessions.ParseSessions(r, w)
 
-	db.Conn("student")
+	db.Conn("user")
 
 	defer db.DB.Close()
 
-	// Determine if the sessions is an actual student
-	if err != nil || !util.ExistsString(user.Permissions, "student") {
+	// Determine if the sessions is an actual user
+	if err != nil || !util.ExistsString(user.Permissions, "user") {
 		quickerrors.NotLoggedIn(w)
 		return
 	}

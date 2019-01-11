@@ -55,7 +55,7 @@ func GenJWT(user JWTData) (string, error) {
 	Func ReadJWT:
 		@param jwt string
 
-		returns student data based on the current jwt
+		returns user data based on the current jwt
  **/
 func ReadJWT(token string) (JWTData, error) {
 	// Decode the token
@@ -81,7 +81,7 @@ func ReadJWT(token string) (JWTData, error) {
 
 	// Get claims
 	claims := tokenDec.Claims.(jwt.MapClaims)
-	// Push to student
+	// Push to user
 
 	perm := claims["Permissions"].([]interface{})
 

@@ -13,7 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
-	User "student/auth"
+	User "user/auth"
 )
 
 // 404 Handler
@@ -38,7 +38,7 @@ func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	// Overview........
 	// I needed to update an existing function so instead of actually taking the time to do it I came up with a super hacked up solution
 
-	// Get the student details
+	// Get the user details
 	StudentID := r.URL.Query().Get("Student_ID")
 	Period := r.URL.Query().Get("Period")
 	Day := r.URL.Query().Get("Day")
@@ -65,7 +65,7 @@ func ExportTimetable(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		Util.Error(200, "OK", string(jsonResp), "Response", w)
 
 	} else if typeReq == "GetAll" {
-		// Get the student id
+		// Get the user id
 		StudentID := r.URL.Query().Get("Student_ID")
 		// Check that it exists
 		if StudentID == "" {
@@ -117,9 +117,9 @@ func main() {
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
 	// Handle authentication
-	router.POST("/student/auth", User.AuthHandler)
+	router.POST("/user/auth", User.AuthHandler)
 	router.POST("/admin/auth", Admin.AuthHandler)
-	router.POST("/student/logout", User.Logout)
+	router.POST("/user/logout", User.Logout)
 	// END AUTHENTICATION AND USERS ==================
 
 	// Handler for file server for assets e.t.c

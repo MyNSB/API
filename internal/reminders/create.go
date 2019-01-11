@@ -9,22 +9,22 @@ import (
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/student"
+	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func CreateReminder(db *sql.DB, user student.User, reminder Reminder) error {
-	// Convert the student ID into an integer
+func CreateReminder(db *sql.DB, user user.User, reminder Reminder) error {
+	// Convert the user ID into an integer
 	studentID, _ := strconv.Atoi(user.Name)
 	jsonTXT, _ := json.Marshal(reminder.Tags)
 	headersTXT, _ := json.Marshal(reminder.Headers)
 
 	// Push into database
 	_, err := db.Exec("INSERT INTO reminders (student_id, headers, body, tags, reminder_date_time)  VALUES ($1, $2, $3, $4, $5::TIMESTAMP)",
-		studentID, headersTXT, reminder.Body, jsonTXT, reminder.ReminderDateTime)
+		studentID, headersTXT, reminder.Body, jsonTXT, reminder.DateTime)
 
 	if err != nil {
 		return errors.New("oopsie, doopsie, doo")
@@ -79,10 +79,10 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 
 		// Push everything into a reminders type
 		reminder := Reminder{
-			Headers:          headers,
-			Body:             body,
-			Tags:             tags,
-			ReminderDateTime: reminderDateTimeVal,
+			Headers:  headers,
+			Body:     body,
+			Tags:     tags,
+			DateTime: reminderDateTimeVal,
 		}
 
 		// Push everything into the database

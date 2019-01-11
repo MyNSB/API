@@ -17,8 +17,8 @@ import (
 */
 func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if the currently logged in student is allowed here
-	allowed, _ := sessions.UserIsAllowed(r, w, "student")
+	// Determine if the currently logged in user is allowed here
+	allowed, _ := sessions.UserIsAllowed(r, w, "user")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return

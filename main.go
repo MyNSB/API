@@ -10,7 +10,7 @@ import (
 	"mynsb-api/internal/events"
 	"mynsb-api/internal/events/calendar"
 	"mynsb-api/internal/reminders"
-	"mynsb-api/internal/student/userdetails"
+	"mynsb-api/internal/user/userdetails"
 	"mynsb-api/internal/timetable"
 	"mynsb-api/internal/week"
 	"net/http"
