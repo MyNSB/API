@@ -102,7 +102,6 @@ func SolidError(status int, statusMessage string, body string, title string, w h
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":"%s"}}`, status, statusMessage, title, body)))
 }
 
-// Function to encrypt error messages for fixing later
 
 // Function to return the number of returned rows it takes an actual query coz go is fucking stupid and will only let you iterate over the fucking set one fucking time!!!!
 func NumResults(db *sql.DB, query string, args ...interface{}) (int, error) {

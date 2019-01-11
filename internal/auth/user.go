@@ -25,143 +25,169 @@ import (
 
 // TODO: Refactor spaghetti code
 
-// Function that parses the raw html string returned by the school and returns the school details
-func getStudentDetails(rawHTML string) (string, string) {
-	var re = regexp.MustCompile(`<divclass="page-header"><h1>(.*)<br><small>Homepage</small></h1></div>`)
-	out := strings.TrimLeft(strings.TrimRight(re.FindString(rawHTML), `<br><small>Homepage</small></h1></div>`), `<divclass="page-header"><h1>`)
-	// Match the first names, last names e.t.c...
-	var firstNameS = regexp.MustCompile(`[A-Z][a-z]+`)
-	var lastName = regexp.MustCompile(`[A-Z]+$`)
 
-	return firstNameS.FindString(out), lastName.FindString(out)
-}
+// AUTHENTICATION FUNCTIONS
 
-func pushAndUpdateDB(db *sql.DB, studentID string, fName string, lName string, studentYear string) {
+// authenticateStudent takes a student's provided details and checks weather those details exist within the school's system
+func authenticateStudent(StudentID string, Password string) (int, string) {
 
-	// Convert user id to integer
-	studentIDInt, _ := strconv.Atoi(studentID)
-	studentYearInt, _ := strconv.Atoi(studentYear)
-
-	_, err := db.Query("SELECT insert_student($1, $2, $3, $4)", studentIDInt, fName, lName, studentYearInt)
-	if err != nil {
-		panic(err)
-	}
-}
-
-/**
-	Func Authenticate:
-		@param StudentID int
-		@param Password string
-
-		returns a boolean representing if the login details are valid
-		(bool) 1 = Valid
-		(bool) 0 = Invalid
-**/
-func Authenticate(StudentID string, Password string) (int, string, error) {
+	// Setup NTLM client
 	client := &http.Client{
 		Transport: ntlmssp.Negotiator{
 			RoundTripper: &http.Transport{},
 		},
 	}
 
-	req, err := http.NewRequest("GET", "http://web1.northsydbo-h.schools.nsw.edu.au", nil)
-	if err != nil {
-		return 0, "", errors.New("error authenticating")
-	}
+	// Send the request
+	req, _ := http.NewRequest("GET", "http://web1.northsydbo-h.schools.nsw.edu.au", nil)
 	req.SetBasicAuth(StudentID, Password)
 	res, err := client.Do(req)
+	if err != nil {
+		return 0, ""
+	}
 
-	// Strip it of whitespace
 	body, _ := ioutil.ReadAll(res.Body)
-	resp := strings.Map(func(r rune) rune {
+	return res.StatusCode, sanitise(body)
+}
+
+
+
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// sanitise strips the whitespace from the input string
+func sanitise(input []byte) string {
+	return strings.Map(func(r rune) rune {
 		if unicode.IsSpace(r) {
 			return -1
 		}
 		return r
-	}, string(body))
-
-	if err != nil {
-		return 0, "", errors.New("error authenticating")
-	}
-
-	return res.StatusCode, resp, nil
+	}, string(input))
 }
 
-// Http handler for authentication
-func UserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	_, err := sessions.ParseSessions(r, w)
-	if err == nil {
+// getStudentDetails takes a raw HTML dump of the school's classery and extract's the current student's details from it
+func getStudentName(rawHTML string) (string, string) {
+	// Regex to match the student details from the classert
+	var re = regexp.MustCompile(`<divclass="page-header"><h1>(.*)<br><small>Homepage</small></h1></div>`)
+
+	// Search for the user data using the regex and remove all the unnecessary information
+	userData := strings.TrimLeft(strings.TrimRight(re.FindString(rawHTML), `<br><small>Homepage</small></h1></div>`), `<divclass="page-header"><h1>`)
+
+	// Regex for extracting further information
+	var firstNameMatch = regexp.MustCompile(`[A-Z][a-z]+`)
+	var lastNameMatch  = regexp.MustCompile(`[A-Z]+$`)
+
+	return firstNameMatch.FindString(userData), lastNameMatch.FindString(userData)
+}
+
+
+// insertStudentIntoDB inserts a student into our database based off the provided information
+func insertStudentIntoDB(db *sql.DB, studentID string, fName string, lName string, studentYear string) {
+
+	// Convert userID and the student year into integers
+	studentIDInt, _ := strconv.Atoi(studentID)
+	studentYearInt, _ := strconv.Atoi(studentYear)
+
+	_, err := db.Query("SELECT insert_student($1, $2, $3, $4)", studentIDInt, fName, lName, studentYearInt)
+	if err != nil {
+		// yikes
+		panic(err)
+	}
+}
+
+// getStudentGrade takes a student's studentID and returns what year they are in
+func getStudentGrade(studentID string) (string, error) {
+	// Get the GOPATH
+	gopath := util.GetGOPATH()
+	// Set up the timetable
+	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
+	jsonData, err := timetable.GetJson(timetableDir)
+	if err != nil {
+		return "", nil
+	}
+
+	// Get the year
+	return timetable.GetYear(studentID, jsonData)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// UserAuthenticationHandler handles a user's request to log into the app
+func UserAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	// Determine if the user is already logged in
+	_, notLoggedIn := sessions.ParseSessions(r, w)
+	if notLoggedIn == nil {
 		quickerrors.AlreadyLoggedIn(w)
 		return
 	}
 
+	// Connect to DB
 	db.Conn("admin")
 	defer db.DB.Close()
 
 
-	// Retrieve auth details
-	var StudentId string
-	var Password string
+	studentID := ""
+	password  := ""
+	ok		  := true
 
-	// Attain the details and set them
-	if studentId, password, ok := r.BasicAuth(); !ok || studentId == "" || password == "" {
+	// Attain the incoming student's details
+	if studentID, password, ok = r.BasicAuth(); !ok || !util.IsSet(studentID, password) {
 		quickerrors.MalformedRequest(w, "Invalid Request, missing details")
 		return
-	} else {
-		StudentId = studentId
-		Password = password
 	}
 
-	// Attain jwt from these variables
-	StatusCode, rawHTML, _ := Authenticate(StudentId, Password)
+	statusCode, authResponse := authenticateStudent(studentID, password)
 
-	if StatusCode == 200 {
-		// Generate the jwtToken
-		jwtToken, err := jwt.GenJWT(userToJWTData(user.User{Name: StudentId, Password: Password, Permissions: []string{"user"}}))
-
-		// Create the session
+	if statusCode == 200 {
+		// Generate the jwtToken for the user and generate a session for the user too
+		jwtToken, err := jwt.GenJWT(
+			userToJWTData(
+				user.User{
+					Name: studentID,
+					Password: password,
+					Permissions: []string{"user"}}))
 		sessions.GenerateSession(w, r, jwtToken)
 
-		// DATABASE STUFF ===============
-		// Get the spicy details from the details function
-		fnameS, lastName := getStudentDetails(rawHTML)
 
+		firstName, lastName := getStudentName(authResponse)
+		studentGrade, err := getStudentGrade(studentID)
+		insertStudentIntoDB(db.DB, studentID, firstName, lastName, studentGrade)
 
-		// Get the GOPATH
-		gopath := util.GetGOPATH()
-		// Set up the timetable
-		timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
-		jsonData, err := timetable.GetJson(timetableDir)
-		if err != nil {
-			panic(err)
-			quickerrors.InternalServerError(w)
-			return
-		}
-
-		// Get the year
-		year, _ := timetable.GetYear(StudentId, jsonData)
-		// Parse into our little function
-		pushAndUpdateDB(db.DB, StudentId, fnameS, lastName, year)
-		// END DATABASE ================
-
-		// Determine that no error occurred using compound if statements
 		if err != nil {
 			quickerrors.InternalServerError(w)
 			return
 		}
 
-		util.SolidError(200, "OK", "Logged In as: "+StudentId, "Success!", w)
+		util.SolidError(200, "OK", "Logged In as: "+studentID, "Success!", w)
 		return
-
 	}
 
 	util.SolidError(401, "Unauthorized", "user details provided are invalid", "Unauthorized", w)
-
 }
 
-// LogoutHandler function
-func LogoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+// LogoutRequestHandler handles a logout request from a student or an admin
+func LogoutRequestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	err := sessions.Logout(w, r)
 	if err != nil {

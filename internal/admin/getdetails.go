@@ -9,18 +9,44 @@ import (
 	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
+	"database/sql"
 )
 
-type details struct {
-	AdminName   string
-	Permissions string
+
+// UTILITY FUNCTIONS
+
+// getDetails takes a user and returns their all the information regarding that user, the assumption here is that the admin is a user
+func getDetails(db *sql.DB, user user.User) string {
+
+	// Query for the admin based off their name
+	result, _ := db.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
+	defer result.Close()
+
+	// Push it into a user
+	details := user.User{}
+	for result.Next() {
+		result.Scan(&user.Name, &user.Permissions)
+	}
+
+	response, _ := json2.Marshal(details)
+	return string(response)
 }
 
-// Retrieves the details for an incoming user
-/*
-	http handlers need minimal documentation
-*/
-func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// DetailRetrievalHandler retrieves the details of the admin that is currently logged in, if the requesting user is not an admin then they are blocked
+func DetailRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Determine if the user is allowed here
 	allowed, user := sessions.UserIsAllowed(r, w, "admin")
@@ -33,36 +59,6 @@ func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	db.Conn("user")
 	defer db.DB.Close()
 
-	// Get the details
-	util.Error(200, "OK", getDetails(user), "Response", w)
+	util.Error(200, "OK", getDetails(db.DB, user), "Response", w)
 	return
 }
-
-/*
-	@ UTIL FUNCTIONS ==================================================
-*/
-/*
-	getDetails takes a user and returns the details for that user
-	@params;
-		user user.user
-*/
-func getDetails(user user.User) string {
-	rows, _ := db.DB.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
-	defer rows.Close()
-
-	// userDetails structure
-	details := details{}
-
-	// Scan into the rows
-	for rows.Next() {
-		rows.Scan(&details.AdminName, &details.Permissions)
-	}
-
-	json, _ := json2.Marshal(details)
-
-	return string(json)
-}
-
-/*
-	@ END UTIL FUNCTIONS ==================================================
-*/

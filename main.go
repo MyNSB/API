@@ -57,11 +57,11 @@ func main() {
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
 	// Handle authentication
-	router.POST("/api/v1/user/auth", auth.UserHandler) /**/
-	router.POST("/api/v1/admin/auth", auth.AdminHandler) /**/
-	router.POST("/api/v1/user/Logout", auth.LogoutHandler) /**/
-	router.GET("/api/v1/user/GetDetails", userdetails.GetHandler) /**/
-	router.GET("/api/v1/admin/GetDetails", admin.GetHandler) /**/
+	router.POST("/api/v1/user/auth", auth.UserAuthenticationHandler)     /**/
+	router.POST("/api/v1/admin/auth", auth.AdminAuthenticationHandler)   /**/
+	router.POST("/api/v1/user/Logout", auth.LogoutRequestHandler)        /**/
+	router.GET("/api/v1/user/GetDetails", userdetails.GetHandler)        /**/
+	router.GET("/api/v1/admin/GetDetails", admin.DetailRetrievalHandler) /**/
 	// END AUTHENTICATION AND USERS ==================
 
 	// Handler for file server for assets e.t.c

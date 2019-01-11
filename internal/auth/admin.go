@@ -15,15 +15,106 @@ import (
 	"mynsb-api/internal/user"
 )
 
-// Http handler for admin authentication
-/*
-	Handler's have minimal documentation
-*/
-func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if a user is already logged in
-	_, err := sessions.ParseSessions(r, w)
-	if err == nil {
+// AUTHENTICATION FUNCTION
+
+// authenticateAdmin takes an admin's details and checks weather they exist in the DB or not :)
+func authenticateAdmin(Username, Password string, db *sql.DB) (user.User, error) {
+
+	// Hash the password
+	passwordHash := util.HashString(Password)
+
+	// Determine if current Admin exists in database
+	numAdmins, _ := util.NumResults(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
+	if numAdmins != 1 {
+		return user.User{}, errors.New("currAdmin does not exist")
+	}
+
+	// Finally, get the admin's details
+	// NOTE: This section may be optimised by amalgamating the request for the number of admins with the query for the admin's details but that produces messier and unreadable code
+	// Also the change in performance is not worth it
+	rows, _ := db.Query("SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
+	defer rows.Close()
+
+	// Attain the result
+	currAdmin := user.User{
+		Name:     Username,
+		Password: Password,
+	}
+	for rows.Next() {
+		currAdmin.AdminScanFrom(rows)
+	}
+
+	return currAdmin, nil
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// parseRequest takes the incoming request and attains the sent parameters from it
+func parseRequest(r *http.Request) (map[string]string, error) {
+	// Retrieve auth details
+	username := ""
+	password := ""
+	ok		 := true
+
+	// Attain the parameters
+	if username, password, ok = r.BasicAuth(); !ok || !util.IsSet(username, password) {
+		return nil, errors.New("invalid request")
+	}
+
+	return  map[string]string{
+		"username": username,
+		"password": password,
+	}, nil
+}
+
+
+// processDetails handles the core of the authentication including JWT and session generation
+func processDetails(details map[string]string, w http.ResponseWriter, r *http.Request) error {
+
+	currAdmin, err := authenticateAdmin(details["username"], details["password"], db.DB)
+	if err != nil {
+		return errors.New("invalid admin details")
+	}
+
+	// Create the jwtToken and then set up a session
+	jwtToken, _ := jwt.GenJWT(userToJWTData(currAdmin))
+	sessions.GenerateSession(w, r, jwtToken)
+
+
+	return nil
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+
+// AdminAuthenticationHandler is a HTTP handler that handles an authentication request from an admin
+func AdminAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	_, notLoggedIn := sessions.ParseSessions(r, w)
+	if notLoggedIn == nil {
 		quickerrors.AlreadyLoggedIn(w)
 		return
 	}
@@ -33,119 +124,17 @@ func AdminHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	defer db.DB.Close()
 
 	// Get the details for the incoming request
-	details, err := getAuthDetails(r)
+	details, err := parseRequest(r)
 	if err != nil {
 		quickerrors.MalformedRequest(w, "Missing details")
 		return
 	}
 
-	// Process these details
 	err = processDetails(details, w, r)
 	if err != nil {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
-	// All g
 	quickerrors.OK(w)
 }
-
-/*
-	auth takes the username and password and checks if the admin really exists in the database, the function can be called from anywhere
-	@params;
-		Username string
-		Password string
-		db *sql.db
-*/
-func Auth(Username, Password string, db *sql.DB) (user.User, error) {
-	passwordHash := util.HashString(Password)
-
-	// Determine if currAdmin exists in database
-	if count, err := util.NumResults(db, "SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash); err != nil || count != 1 {
-		return user.User{}, errors.New("currAdmin does not exist")
-	}
-
-	// Finally query the database for the currAdmin's details
-	rows, _ := db.Query("SELECT * FROM admins WHERE admin_name = $1 AND admin_password = $2", Username, passwordHash)
-	defer rows.Close()
-
-	// Actual user
-	// Construct the currAdmin
-	currAdmin := user.User{
-		Name:     Username,
-		Password: Password,
-	}
-
-	// Scan the currAdmin details into the currAdmin variable
-	for rows.Next() {
-		currAdmin.AdminScanFrom(rows)
-	}
-
-	return currAdmin, nil
-}
-
-/*
-	@ UTIL FUNCTIONS ==================================================
-*/
-/*
-	getDetails takes the incoming http request and extracts the details from it
-	@params;
-		r *http.Request
-*/
-func getAuthDetails(r *http.Request) (map[string]string, error) {
-	// Retrieve auth details
-	Username := ""
-	Password := ""
-
-	// Attain the details
-	if username, password, ok := r.BasicAuth(); !ok || username == "" || password == "" {
-		return nil, errors.New("invalid request")
-	} else {
-		Username = username
-		Password = password
-	}
-
-	// Create a map of the username and password
-	toReturn := make(map[string]string)
-
-	// Push contents into toReturn
-	toReturn["username"] = Username
-	toReturn["password"] = Password
-
-	return toReturn, nil
-}
-
-/*
-	processDetails takes the details map and determines if they really are an admin, it then converts that admin to a user, calculates
-	the jwt representation of it generates session details for the user requesting to authenticate and then exists, phew that's a lot
-	@params;
-		details map[string]string
-		w http.ResponseWriter
-		r* http.Request
-*/
-func processDetails(details map[string]string, w http.ResponseWriter, r *http.Request) error {
-	// Authenticate
-	currAdmin, err := Auth(details["username"], details["password"], db.DB)
-	if err != nil {
-		return errors.New("invalid admin details")
-	}
-
-
-	// Create the jwtToken
-	jwtToken, err := jwt.GenJWT(userToJWTData(currAdmin))
-	if err != nil {
-		return errors.New("something went wrong")
-	}
-
-	// Generate a session from the given jwtToken
-	err = sessions.GenerateSession(w, r, jwtToken)
-	if err != nil {
-		return errors.New("something went wrong")
-	}
-
-	return nil
-}
-
-/*
-	@ END UTIL FUNCTIONS ==================================================
-*/
