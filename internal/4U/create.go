@@ -170,12 +170,12 @@ func getIncomingArticle(r *http.Request) (Article, error) {
 // IssueCreationHandler creates 4U issues
 func IssueCreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Connect to database
+	// connect to database
 	db.Conn("admin")
 	defer db.DB.Close()
 
 	// Determine if the user is allowed here and if not force them to leave
-	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
+	allowed, _ := sessions.IsUserAllowed(r, w, "visions", "admin")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return
@@ -203,12 +203,12 @@ func IssueCreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 // ArticleCreationHandler is a HTTP handler for article creation
 func ArticleCreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Connect to database as an admin
+	// connect to database as an admin
 	db.Conn("admin")
 	defer db.DB.Close()
 
 	// Determine if the user is allowed here and if not force them to leave
-	allowed, _ := sessions.UserIsAllowed(r, w, "visions", "admin")
+	allowed, _ := sessions.IsUserAllowed(r, w, "visions", "admin")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return

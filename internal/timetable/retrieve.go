@@ -288,7 +288,7 @@ func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	var StudentID string
 
 
-	allowed, user := sessions.UserIsAllowed(r, w, "user")
+	allowed, user := sessions.IsUserAllowed(r, w, "user")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return

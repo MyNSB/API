@@ -49,13 +49,13 @@ func getDetails(db *sql.DB, user user.User) string {
 func DetailRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Determine if the user is allowed here
-	allowed, user := sessions.UserIsAllowed(r, w, "admin")
+	allowed, user := sessions.IsUserAllowed(r, w, "admin")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
-	// Connect to Database
+	// connect to Database
 	db.Conn("user")
 	defer db.DB.Close()
 

@@ -167,7 +167,7 @@ func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	defer db.DB.Close()
 
 	// Get the user struct from an existing session and determine if they are allowed here
-	allowed, user := sessions.UserIsAllowed(r, w, "admin")
+	allowed, user := sessions.IsUserAllowed(r, w, "admin")
 	if !allowed || !user.IsAdmin(user) {
 		quickerrors.NotEnoughPrivileges(w)
 		return

@@ -13,7 +13,8 @@ import (
 	"strconv"
 )
 
-// Don't need this but kinda ceebs fixing it so please deal with it later
+
+// details struct dictates the possible response from a query returned form the user table in the database
 type details struct {
 	StudentID uint64
 	Fname     string
@@ -21,39 +22,53 @@ type details struct {
 	Year      uint8
 }
 
-func getDetails(db *sql.DB, user user.User) string {
-	// Convert the user's name into an integer
-	studentID, _ := strconv.Atoi(user.Name)
 
+
+// UTILITY FUNCTIONS
+
+// getDetails takes a user object and returns all the details stored in the DB about that user
+func getDetails(db *sql.DB, user user.User) string {
+
+	// Convert the user's ID into an integer
+	studentID, _ := strconv.Atoi(user.Name)
 	rows, _ := db.Query("SELECT * FROM students WHERE student_id = $1", studentID)
 
-	details := details{}
 
-	// Iterate over it
+	details := details{}
 	for rows.Next() {
 		rows.Scan(&details.StudentID, &details.Fname, &details.Lname, &details.Year)
 	}
-
-	// Marshall the response
 	resp, _ := json.Marshal(details)
 
 	return string(resp)
 }
 
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// GetHandler handles an incoming HTTP request
 func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	user, err := sessions.ParseSessions(r, w)
+	currUser, err := sessions.ParseSessions(r, w)
 
 	db.Conn("user")
-
 	defer db.DB.Close()
 
-	// Determine if the sessions is an actual user
-	if err != nil || !util.ExistsString(user.Permissions, "user") {
+	// Determine if generated user is legitimately a user
+	if err != nil || !util.ExistsString(currUser.Permissions, "user") {
 		quickerrors.NotLoggedIn(w)
 		return
 	}
 
-	util.Error(200, "OK", getDetails(db.DB, user), "Response", w)
-	return
+
+	util.Error(200, "OK", getDetails(db.DB, currUser), "Response", w)
 }

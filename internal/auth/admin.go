@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
-	"mynsb-api/internal/admin"
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/jwt"
 	"mynsb-api/internal/quickerrors"
@@ -42,7 +41,7 @@ func authenticateAdmin(Username, Password string, db *sql.DB) (user.User, error)
 		Password: Password,
 	}
 	for rows.Next() {
-		currAdmin.AdminScanFrom(rows)
+		currAdmin.ScanSQLIntoAdmin(rows)
 	}
 
 	return currAdmin, nil
@@ -119,7 +118,7 @@ func AdminAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httpro
 		return
 	}
 
-	// Connect to database
+	// connect to database
 	db.Conn("user")
 	defer db.DB.Close()
 

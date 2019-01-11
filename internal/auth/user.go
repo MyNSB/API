@@ -2,7 +2,6 @@ package auth
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/Azure/go-ntlmssp"
 	_ "github.com/SermoDigital/jose"
 	"github.com/julienschmidt/httprouter"
@@ -103,6 +102,7 @@ func insertStudentIntoDB(db *sql.DB, studentID string, fName string, lName strin
 	}
 }
 
+
 // getStudentGrade takes a student's studentID and returns what year they are in
 func getStudentGrade(studentID string) (string, error) {
 	// Get the GOPATH
@@ -141,7 +141,7 @@ func UserAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprou
 		return
 	}
 
-	// Connect to DB
+	// connect to DB
 	db.Conn("admin")
 	defer db.DB.Close()
 

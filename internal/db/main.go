@@ -11,10 +11,7 @@ import (
 
 // Whole thing is pre much just an abstraction
 
-/**
-	Connection struct
-	defines the basic behaviour and definition of a connection
-**/
+// Connection struct is a struct that defines the connection details required for DB authentication
 type Connection struct {
 	Host         string
 	Port         string
@@ -26,75 +23,80 @@ type Connection struct {
 // Database pointer
 var DB *sql.DB
 
-/**
-	Func Connect:
-		@param connection *Connection
-		returns nil and just connects to the database
-**/
-func (connection *Connection) Connect() error {
-	var err error
-	// Connect to the database
-	DB, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+
+
+
+// CONNECTION FUNCTIONS
+
+
+// connect takes a connection configuration and connects to the psql database with it, the database connection is reflected within the db.DB object
+func (connection *Connection) connect() error {
+
+	// connect to the database
+	DB, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		connection.Host, connection.Port, connection.User, connection.Password, connection.DatabaseName))
 	if err != nil {
-		fmt.Printf(err.Error())
+		return errors.New("could not connect to the database")
 	}
 
 	if err = DB.Ping(); err != nil {
-		panic(err)
+		return errors.New("could not connect to the database")
 	}
 
 	return nil
 }
 
-/*
-	UTILITY FUNCTIONS
-*/
 
-/**
-	Func getConnections:
-		return db.Connection
-**/
-func getConnection() (Connection, error) {
-	ConnectionDetails, err := filesint.DataDump("database", "/details.txt")
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// getConnectionDetails returns a connection configuration based off the current database config in database/details.txt
+func getConnectionDetails() (Connection, error) {
+
+	connectionDetails, err := filesint.DataDump("database", "/details.txt")
 	if err != nil {
 		return Connection{}, err
 	}
 
-	// Read the details from th file
-	detailsArray := strings.Split(string(ConnectionDetails), ",")
-
+	// Attain the configuration through separation of delimiters
+	detailsArray := strings.Split(string(connectionDetails), ",")
 	host := strings.Split(detailsArray[0], ":")[1]
 	port := strings.Split(detailsArray[1], ":")[1]
 
-	// Return the connection
+
 	return Connection{
 		Host: host,
 		Port: port,
 	}, nil
 }
 
-// Conn function for connection to database
-// sensitiveLoc should look something like
-func Conn(user string) error {
-	// Connect to database as user
-	connection, err := getConnection()
-	if err != nil {
-		panic(err)
-	}
-	// If err != nil why??
-	connection.User = user
 
-	// Attain the user password
+// getUserPswd returns the pswd of the user inputted, this password is read off the /user pass/user.txt file
+func getUserPswd(user string) string {
 	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/user pass/%s.txt", user)); err == nil {
-		connection.Password = string(pwd)
-	} else {
-		return errors.New("could not authenticate")
+		return string(pwd)
 	}
 
-	connection.DatabaseName = "mynsb"
+	return ""
+}
 
-	err = connection.Connect()
+
+// Conn takes a string signifying the type of user you wish to authenticate as and connects to it via the .connect() function
+func Conn(user string) error {
+	// connect to database as user
+	connectionDetails, _ := getConnectionDetails()
+	connectionDetails.User = user
+	connectionDetails.Password = getUserPswd(user)
+	connectionDetails.DatabaseName = "mynsb"
+
+	err := connectionDetails.connect()
 	if err != nil {
 		return errors.New("could not connect to database")
 	}

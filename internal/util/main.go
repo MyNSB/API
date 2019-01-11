@@ -13,16 +13,9 @@ import (
 
 const APIURL = "http://127.0.0.1"
 
-/**
-	Func Search:
-		@param array AnyArray[]
-		@param value
 
-		returns Boolean
-		True: Item exists
-		False: Item doesn't exist
-**/
 
+// ExistsString takes an array and an entry string and determines if that entry string resides in that array
 func ExistsString(array []string, entry string) bool {
 	for _, b := range array {
 		if b == entry {
@@ -32,6 +25,8 @@ func ExistsString(array []string, entry string) bool {
 	return false
 }
 
+
+// GetGOPATH returns the system's first GOPATH variable
 func GetGOPATH() string {
 	// NOTE... This is a hack, as soon as you can find a better option... use it PLEASE!!!
 	gopath := strings.Split(os.Getenv("GOPATH"), string(os.PathListSeparator))
@@ -44,20 +39,14 @@ func GetGOPATH() string {
 	return gopath[0]
 }
 
-/**
-	Func isset:
-		@param *string
 
-		returns boolean
-		True: Var exists
-		False: Var doesn't exist
-**/
-
+// NonNull determines if a string is empty, honestly just a code styling thing
 func NonNull(thing string) bool {
 	return thing != ""
 }
 
-// Abstraction of isset
+
+// IsSet behaves much like php's isset and takes a list of variables and determins if they are null
 func IsSet(vars ...string) bool {
 	for _, varVal := range vars {
 		if !NonNull(varVal) {
@@ -67,6 +56,8 @@ func IsSet(vars ...string) bool {
 	return true
 }
 
+
+// HashString takes an input string and hashes it with the sha256 algorithm, unfortunately not the one you would see in your hashtables ;) too big :p
 func HashString(toHash string) string {
 	// Create a hasher
 	h := sha256.New()
@@ -78,6 +69,8 @@ func HashString(toHash string) string {
 	return sha256Hash
 }
 
+
+// IsSubset takes two arrays of strings and determines if the second array is a subset of the first
 func IsSubset(first, second []string) bool {
 	for _, val := range first {
 		if !ExistsString(second, val) {
@@ -88,14 +81,18 @@ func IsSubset(first, second []string) bool {
 	return true
 }
 
-// Function to remove all that ugly code error e.t.c
+
+
+// Error function for returning array based responses
 func Error(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(status)
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":[%s]}}`, status, statusMessage, title, body)))
 }
 
-// Function to remove all that ugly code error e.t.c
+
+
+// Error function for returning object based responses
 func SolidError(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(status)
@@ -103,19 +100,16 @@ func SolidError(status int, statusMessage string, body string, title string, w h
 }
 
 
-// Function to return the number of returned rows it takes an actual query coz go is fucking stupid and will only let you iterate over the fucking set one fucking time!!!!
+// NumResults takes a db and a query and determines how many results were returned from that query
 func NumResults(db *sql.DB, query string, args ...interface{}) (int, error) {
 	rows, err := db.Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
 	counter := 0
-
 	for rows.Next() {
 		counter += 1
 	}
-
 	rows.Next()
-
 	return counter, nil
 }

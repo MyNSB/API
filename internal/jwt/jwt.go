@@ -9,6 +9,8 @@ import (
 
 // NOTE ========== THE jwt PACKAGE ONLY TAKES THE JWTData struct
 
+
+// JWTData struct for dealing with JWTData
 type JWTData struct {
 	User 	 	string
 	Password 	string
@@ -16,86 +18,70 @@ type JWTData struct {
 }
 
 
-// Attain the directory of the sensitive data
 
-/**
-	Func GetJWT:
-		@param user map[string]interface{}
 
-		returns string which is the jwt and returns an error if something wrong happened
- **/
+// UTILITY FUNCTIONS
+
+// GenJWT generates a JWT token based off the userData provided
 func GenJWT(user JWTData) (string, error) {
-	// Generate a token
-	token := jwt.New(jwt.GetSigningMethod("HS256"))
 
-	// Start the claims
+	token := jwt.New(jwt.GetSigningMethod("HS256"))
+	oneMonth := time.Hour * 24 * 30
+
 	claims := token.Claims.(jwt.MapClaims)
 	claims["User"] = user.User
 	claims["Password"] = user.Password
 	claims["Permissions"] = user.Permissions
-	claims["Expires"] = time.Now().Add(time.Hour * 24 * 30)
+	claims["Expires"] = time.Now().Add(oneMonth)
 
-	// Read key
-	privKey, err := filesint.DataDump("sensitive", "/keys/priv.txt")
+	// Get the private key
+	privateKey, err := filesint.DataDump("sensitive", "/keys/priv.txt")
 	if err != nil {
 		return "", errors.New("error generating jwt")
 	}
 
 	// Generate the signed token
-	signedToken, err := token.SignedString(privKey)
+	signedToken, err := token.SignedString(privateKey)
 	if err != nil {
 		return "", errors.New("error generating jwt")
 	}
 
-	// Throw back the signed token
 	return signedToken, nil
 }
 
-/**
-	Func ReadJWT:
-		@param jwt string
 
-		returns user data based on the current jwt
- **/
+// ReadJWT takes a JWT token and decodes it into a JWTData object
 func ReadJWT(token string) (JWTData, error) {
-	// Decode the token
 
 	var permissions []string
 
 	// Decode token
-	tokenDec, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		// Read the token from the path provided
-		key, err := filesint.DataDump("sensitive", "/keys/priv.txt")
+	tokenData, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		// Get the private key to decode the token
+		privateKey, err := filesint.DataDump("sensitive", "/keys/priv.txt")
 		if err != nil {
 			return nil, errors.New("error parsing jwt")
 		}
 
-		return []byte(key), nil
-
+		return []byte(privateKey), nil
 	})
-
-	// Check for err
-	if err != nil || !tokenDec.Valid {
+	if err != nil || !tokenData.Valid {
 		return JWTData{}, errors.New("invalid jwt")
 	}
 
 	// Get claims
-	claims := tokenDec.Claims.(jwt.MapClaims)
-	// Push to user
+	claims := tokenData.Claims.(jwt.MapClaims)
 
-	perm := claims["Permissions"].([]interface{})
-
-	// Convert to string
-	for _, b := range perm {
+	// Convert the permissions to a string array
+	perms := claims["Permissions"].([]interface{})
+	for _, b := range perms {
 		permissions = append(permissions, b.(string))
 	}
 
-	// Return that shit
-	user := JWTData{
+
+	return JWTData{
 		User: claims["User"].(string),
 		Password: claims["Password"].(string),
 		Permissions: permissions,
-	}
-
-	return user, nil
+	}, nil
 }

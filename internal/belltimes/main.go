@@ -7,16 +7,16 @@ import (
 	"mynsb-api/internal/util"
 )
 
-var Times = make(map[string]map[string]string)
+var timetableData = make(map[string]map[string]string)
 
+// init function loads the data into the timetableData data structure
 func init() {
-	// Get the GOPATH
-	gopath := util.GetGOPATH()
-	// Set up the timetable
-	bellTimesDir := filepath.FromSlash(gopath + "/mynsb-api/internal/belltimes/bellTimes.json")
-	// Read the data
-	data, _ := ioutil.ReadFile(bellTimesDir)
 
-	// Load the json data into the times map
-	json.Unmarshal(data, &Times)
+	// Attain the location of the bellTimes data
+	gopath := util.GetGOPATH()
+	bellTimesDir := filepath.FromSlash(gopath + "/mynsb-api/internal/belltimes/bellTimes.json")
+
+	// Read the file and unmarshal it into the data structure
+	data, _ := ioutil.ReadFile(bellTimesDir)
+	json.Unmarshal(data, &timetableData)
 }

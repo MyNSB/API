@@ -11,77 +11,95 @@ import (
 	"time"
 )
 
+
 // Attain the cookie store password from the sensitive info
 var key, _ = filesint.DataDump("sensitive", "/keys/priv.txt")
-
-// USe it to set up the cookie store
+// Use it to set up the cookie store
 var store = sessions.NewCookieStore(key)
 
-// Function for parsing sessions and generating a user from those sessions
+
+
+// CORE FUNCTIONS
+
+// ParseSessions takes a http request, extracts the session data from it, parses it and returns a user object
 func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
+
 	// Attain session
 	session, _ := store.Get(r, "user-data")
+	oneMonth := time.Hour * 24 * 30
 
-	// Get the expiry date
 	if !(session.Values["token"] == nil) {
-		// Attain values and parse token
-		// Parse jwt
+
 		currUser, err := jwt.ReadJWT(session.Values["token"].(string))
 		if err != nil {
 			return user.User{}, err
 		}
 
-		// Renew the session
-		session.Options.MaxAge = int(time.Duration(time.Hour * 24 * 30).Seconds())
-		// Save the sessions
+		session.Options.MaxAge = int(time.Duration(oneMonth).Seconds())
 		session.Save(r, w)
 
 		return jwtDataToUser(currUser), nil
 	}
 
-	// Tell the user that auth is required again
 	return user.User{}, errors.New("session is invalid, please authenticate again")
 }
 
+
+// GenerateSession generates a session based off a JWT-token
 func GenerateSession(w http.ResponseWriter, r *http.Request, token string) error {
+
 	// Create the session
 	session, err := store.New(r, "user-data")
 	if err != nil {
 		return err
 	}
-	// Expire 1 month from now
+
 	session.Values["token"] = token
 	session.Options.Path = "/"
-
 	session.Save(r, w)
 
 	return nil
 }
 
-func UserIsAllowed(r *http.Request, w http.ResponseWriter, requirements ...string) (bool, user.User) {
+
+// IsUserAllowed determines if the currently logged in user meets a set of requirements
+func IsUserAllowed(r *http.Request, w http.ResponseWriter, requirements ...string) (bool, user.User) {
+
 	currUser, err := ParseSessions(r, w)
 	if err != nil {
 		return false, user.User{}
 	}
+
 	return util.IsSubset(requirements, currUser.Permissions), currUser
 }
 
+
+// Logout allows for a user to logout and destroy their session
 func Logout(w http.ResponseWriter, r *http.Request) error {
 
-	// Attain session
 	sess, _ := store.Get(r, "user-data")
+	dead := -1
 
 	if sess.Values["token"] == nil {
-		return errors.New("hmph")
+		return errors.New("session is invalid")
 	}
 
-	// Set the max age
-	sess.Options.MaxAge = -1
+	sess.Options.MaxAge = dead
 	sess.Save(r, w)
 
 	return nil
 }
 
+
+
+
+
+
+
+
+
+
+// jwtDataToUser converts a JWT data object into a user, this is done in an attempt to isolate the JWT module from any other project packages
 func jwtDataToUser(details jwt.JWTData) user.User {
 	return user.User{
 		Name:        details.User,

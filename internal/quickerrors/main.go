@@ -5,7 +5,9 @@ import (
 	"net/http"
 )
 
-// Function to remove all that ugly code error e.t.c
+// This package is pretty much a mass error throwing thingy magiggy
+// Doesn't really do much tbh, just makes the code a lot prettier
+
 func dropErr(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(status)

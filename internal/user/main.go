@@ -12,8 +12,9 @@ type User struct {
 	Permissions []string
 }
 
-// USed only for admin scanning
-func (user *User) AdminScanFrom(rows *sql.Rows) {
+
+// Used to scan an SQL query into a user object, the assumption is that this query is from the admin table
+func (user *User) ScanSQLIntoAdmin(rows *sql.Rows) {
 	// Get the permissions
 	var perms []byte
 	rows.Scan(&user.ID, &user.Name, &user.Password, &perms)

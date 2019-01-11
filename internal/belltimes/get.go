@@ -11,53 +11,21 @@ import (
 	"strconv"
 )
 
-// Handler for serving timetables
-/*
-	http handlers require minimal documentation
-*/
-func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	// Determine if the currently logged in user is allowed here
-	allowed, _ := sessions.UserIsAllowed(r, w, "user")
-	if !allowed {
-		quickerrors.NotEnoughPrivileges(w)
-		return
-	}
+// RETRIEVAL FUNCTIONS
 
-	params, err := getParams(r)
-	if err != nil {
-		quickerrors.MalformedRequest(w, "Assembly is not boolean")
-		return
-	}
+// getBellTimes takes a set of parameters and returns the belltimes in accordance to those params
+func getBellTimes(term string, day string, assembly bool) string {
 
-	// Return the error
-	util.Error(200, "OK", getTimes(params["term"].(string), params["day"].(string), params["assembly"].(bool)), "Response", w)
-}
+	json := []byte{}
+	// Pull the data from the file
+	timetable := timetableData
 
-/*
-	@ UTIL FUNCTIONS ===========================================
-*/
-/*
-	getTimes returns the times given specific parameters
-	@params;
-		term string
-		day string
-		assembly bool
-*/
-func getTimes(term string, day string, assembly bool) string {
-	// Load up the hash map
-	var json []byte
 
-	// Determine what to return
-	timetable := Times
-
-	// Determine if the thursday bell times should be changed
 	if term == "2" || term == "3" {
-		// Convert to non crawford shield times
+		// Convert to non crawford shield timetableData
 		timetable["Thursday"]["Lunch"] = "12:38pm - 1:17pm"
 	}
-
-	// Determine if they want assembly
 	if !assembly {
 		// Switch monday with friday
 		val := timetable["Friday"]
@@ -75,36 +43,78 @@ func getTimes(term string, day string, assembly bool) string {
 	return string(json)
 }
 
-/*
-	getParams returns the parameters of the incoming request
-	@params;
-		r *http.Request
-*/
+
+
+
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// getParams takes a http request and returns the user parameters from it
 func getParams(r *http.Request) (map[string]interface{}, error) {
+
 	term := r.URL.Query().Get("Term")
 	day := r.URL.Query().Get("Day")
-	assembly := r.URL.Query().Get("Assembly")
+	assemblyRaw := r.URL.Query().Get("Assembly")
 
-	assemblyBool := false
+	assembly := false
 
-	// Convert to bool
-	if util.NonNull(assembly) {
+	// Convert assembly to a boolean
+	if util.NonNull(assemblyRaw) {
 		var err error
-		assemblyBool, err = strconv.ParseBool(assembly)
+		assembly, err = strconv.ParseBool(assemblyRaw)
 		if err != nil {
 			return nil, errors.New("assembly is not boolean")
 		}
 	}
 
-	// Construct a map of results
-	toReturn := make(map[string]interface{})
-	toReturn["term"] = term
-	toReturn["day"] = day
-	toReturn["assembly"] = assemblyBool
 
-	return toReturn, nil
+	return map[string]interface{}{
+		"term": term,
+		"day": day,
+		"assembly": assembly,
+	}, nil
 }
 
-/*
-	@ END UTIL FUNCTIONS ===========================================
-*/
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// GetHandler is a http handler that handles requests for the belltimes
+func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+	allowed, _ := sessions.IsUserAllowed(r, w, "user")
+	if !allowed {
+		quickerrors.NotEnoughPrivileges(w)
+		return
+	}
+
+	params, err := getParams(r)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "Assembly is not boolean")
+		return
+	}
+
+	belltimes := getBellTimes(
+		params["term"].(string),
+		params["day"].(string),
+		params["assembly"].(bool))
+
+	// Return the error
+	util.Error(200, "OK", belltimes, "Response", w)
+}
