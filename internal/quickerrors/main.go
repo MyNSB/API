@@ -23,7 +23,7 @@ func AlreadyLoggedIn(w http.ResponseWriter) {
 }
 
 func NotLoggedIn(w http.ResponseWriter) {
-	dropErr(400, "Hmp??", "user is not logged in or can't access this section of the API", "Something went wrong...", w)
+	dropErr(401, "Hmp??", "user is not logged in or can't access this section of the API", "Something went wrong...", w)
 }
 
 func MalformedRequest(w http.ResponseWriter, error string) {

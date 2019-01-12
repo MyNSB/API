@@ -65,29 +65,18 @@ func (event Event) create(db *sql.DB) error {
 
 // UTILITY FUNCTIONS
 
-// parseDateTime takes a date and a format string and determines if the date is valid
-func parseDateTime(dateStart string) (time.Time, error) {
-	t, err := fmtdate.Parse("DD-MM-YYYY hh:mm", dateStart)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	return t, nil
-}
-
-
 // parseIncomingEvent takes a http request and parses the incoming event that is being sent by the user
 func parseIncomingEvent(r *http.Request, organiser string) (Event, error) {
 
 	r.ParseMultipartForm(1000000)
 
-	eventName := r.FormValue("Event_Name")
-	eventEndRAW := r.FormValue("Event_End")
-	eventStartRAW := r.FormValue("Event_Start")
-	eventLocation := r.FormValue("Event_Location")
+	eventName := r.FormValue("Name")
+	eventEndRAW := r.FormValue("End")
+	eventStartRAW := r.FormValue("Start")
+	eventLocation := r.FormValue("Location")
 	eventOrganiser := organiser
-	eventShortDesc := r.FormValue("Event_Short_Desc")
-	eventLongDesc := r.FormValue("Event_Long_Desc")
+	eventShortDesc := r.FormValue("Short_Desc")
+	eventLongDesc := r.FormValue("Long_Desc")
 	// Check that the variables are actually set
 	if !(util.IsSet(eventName, eventEndRAW, eventLocation, eventOrganiser, eventLongDesc, eventStartRAW, eventShortDesc)) {
 		return Event{}, errors.New("user is mising paramaters")
@@ -103,8 +92,8 @@ func parseIncomingEvent(r *http.Request, organiser string) (Event, error) {
 
 
 	// Parse the event datetimes
-	eventStart, parseErrorOne := parseDateTime(eventStartRAW)
-	eventEnd, parseErrorTwo := parseDateTime(eventEndRAW)
+	eventStart, parseErrorOne := util.ParseDateTime(eventStartRAW)
+	eventEnd, parseErrorTwo := util.ParseDateTime(eventEndRAW)
 	if parseErrorTwo != nil || parseErrorOne != nil {
 		return Event{}, errors.New("could not parse date")
 	}

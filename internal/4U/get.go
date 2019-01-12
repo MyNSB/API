@@ -27,8 +27,8 @@ func getAll(db *sql.DB) []Issue {
 // getBetween takes two times and returns all 4U articles published between those two times
 func getBetween(times map[string]string, db *sql.DB) ([]Issue, error) {
 	// Parse the dates
-	start, parseErrOne := parseDate(times["start"])
-	end, parseErrTwo := parseDate(times["end"])
+	start, parseErrOne := util.ParseDate(times["start"])
+	end, parseErrTwo := util.ParseDate(times["end"])
 
 	if parseErrOne != nil || parseErrTwo != nil {
 		return []Issue{}, errors.New("could not parse date")
@@ -85,12 +85,6 @@ func performRequest(db *sql.DB, query string, args ...interface{}) ([]Issue, err
 }
 
 
-// parseDate takes a date as a string and parses it based off a specific format
-func parseDate(date string) (time.Time, error) {
-	return fmtdate.Parse("DD-MM-YYYY", date)
-}
-
-
 
 
 
@@ -127,7 +121,7 @@ func IssueRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		// perform the request
 		articles := getAll(db.DB)
 		bytes, _ := json.Marshal(articles)
-		util.Error(200, "OK", string(bytes), "Response", w)
+		util.HTTPResponse(200, "OK", string(bytes), "Response", w)
 		break
 
 	default: // Request type = between
@@ -139,7 +133,7 @@ func IssueRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 			return
 		}
 		bytes, _ := json.Marshal(res)
-		util.Error(200, "Ok", string(bytes), "Response", w)
+		util.HTTPResponse(200, "Ok", string(bytes), "Response", w)
 		break
 
 	}

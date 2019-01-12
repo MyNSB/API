@@ -71,5 +71,5 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 	}
 
 
-	util.Error(200, "OK", getDetails(db.DB, currUser), "Response", w)
+	util.HTTPResponse(200, "OK", getDetails(db.DB, currUser), "Response", w)
 }

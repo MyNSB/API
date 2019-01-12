@@ -116,5 +116,5 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 		params["assembly"].(bool))
 
 	// Return the error
-	util.Error(200, "OK", belltimes, "Response", w)
+	util.HTTPResponse(200, "OK", belltimes, "Response", w)
 }

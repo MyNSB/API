@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
+	"github.com/metakeule/fmtdate"
 )
 
 const APIURL = "http://127.0.0.1"
@@ -23,6 +25,17 @@ func ExistsString(array []string, entry string) bool {
 		}
 	}
 	return false
+}
+
+
+// ParseDate takes a date string, parses it and returns a time object
+func ParseDate(date string) (time.Time, error){
+	return fmtdate.Parse("DD-MM-YYYY", date)
+}
+
+// ParseDateTime takes a datetime string, parses it and returns a time object
+func ParseDateTime(datetime string) (time.Time, error) {
+	return fmtdate.Parse("DD-MM-YYYY hh:mm", datetime)
 }
 
 
@@ -83,8 +96,8 @@ func IsSubset(first, second []string) bool {
 
 
 
-// Error function for returning array based responses
-func Error(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
+// HTTPResponse function for returning array based responses
+func HTTPResponse(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(status)
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":[%s]}}`, status, statusMessage, title, body)))
@@ -92,8 +105,8 @@ func Error(status int, statusMessage string, body string, title string, w http.R
 
 
 
-// Error function for returning object based responses
-func SolidError(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
+// HTTPResponse function for returning object based responses
+func HTTPResponseArr(status int, statusMessage string, body string, title string, w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/json")
 	w.WriteHeader(status)
 	w.Write([]byte(fmt.Sprintf(`{"Status":{"Code": %d, "Status Message":"%s"},"Message": {"Title":"%s", "Body":"%s"}}`, status, statusMessage, title, body)))

@@ -58,6 +58,6 @@ func DetailRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	db.Conn("student")
 	defer db.DB.Close()
 
-	util.Error(200, "OK", getDetails(db.DB, user), "Response", w)
+	util.HTTPResponse(200, "OK", getDetails(db.DB, user), "Response", w)
 	return
 }

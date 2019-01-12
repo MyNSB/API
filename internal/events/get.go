@@ -30,8 +30,8 @@ func getWithID(eventID int, db *sql.DB) (Event, error) {
 // getBetween returns all events between two times
 func getBetween(db *sql.DB, startStr string, endStr string) ([]Event, error) {
 
-	start, parseErrorOne := parseDate(startStr)
-	end, parseErrorTwo := parseDate(endStr)
+	start, parseErrorOne := util.ParseDate(startStr)
+	end, parseErrorTwo := util.ParseDate(endStr)
 
 	if parseErrorOne != nil || parseErrorTwo != nil {
 		return []Event{}, errors.New("invalid date")
@@ -111,12 +111,6 @@ func parseRequest(r *http.Request) (string, map[string]string) {
 }
 
 
-// parseDate just parses a date based off fmtdate.Parse
-func parseDate(time string) (time2.Time, error) {
-	return fmtdate.Parse("DD-MM-YYYY", time)
-}
-
-
 
 
 
@@ -162,5 +156,5 @@ func EventRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		return
 	}
 
-	util.Error(200, "OK", string(response), "Result: ", w)
+	util.HTTPResponse(200, "OK", string(response), "Result: ", w)
 }

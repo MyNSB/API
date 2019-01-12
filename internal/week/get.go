@@ -17,8 +17,8 @@ import (
 
 // RETRIEVAL FUNCTIONS
 
-// getStartWeekType determines what type of week the current SCHOOL TERM starts on
-func getStartWeekType() (string, time.Time) {
+// getCurrTermInfo determines what type of week the current SCHOOL TERM starts on
+func getCurrTermInfo() (string, time.Time) {
 
 	termDates, _ := getTermDates()
 	var week string
@@ -27,8 +27,8 @@ func getStartWeekType() (string, time.Time) {
 
 
 	for _, name := range termData.Array() {
-		termStartRaw, _ := parseDate(name.Get("start_date").String())
-		termEnd, _ 		:= parseDate(name.Get("end_date").String())
+		termStartRaw, _	:= parseSchoolDate(name.Get("start_date").String())
+		termEnd, _ 		:= parseSchoolDate(name.Get("end_date").String())
 
 		if time.Now().Before(termEnd) && time.Now().After(termStart) {
 			week = name.Get("week_ab").String()
@@ -91,8 +91,8 @@ func getTermDates() (string, error) {
 }
 
 
-// parseDate parses a string and turns it into a date
-func parseDate(time string) (time.Time, error) {
+// parseSchoolDate parses a string and turns it into a date, note, this date is specifically in the school's date format
+func parseSchoolDate(time string) (time.Time, error) {
 	return fmtdate.Parse("YYYY-MM-DD", time)
 }
 
@@ -112,20 +112,22 @@ func parseDate(time string) (time.Time, error) {
 func GetHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 	// Determine what week the term started on
-	startWeekType, termStart := getStartWeekType()
+	startWeekType, termStartDate := getCurrTermInfo()
 	today := time.Now()
 
 	// Calculate difference between two dates in terms of weeks
-	diff := today.Sub(termStart)
+	diff := today.Sub(termStartDate)
 	weeksDif := int((diff.Hours() / 24) / 7)
 
 	// Determine the week type based on the weeksDiff
-	if weeksDif % 2 == 1 && startWeekType == "A" {
-		startWeekType = "B"
-	} else if weeksDif%2 == 1 && startWeekType == "B" {
-		startWeekType = "A"
+	if weeksDif % 2 == 1 {
+		if startWeekType == "A" {
+			startWeekType = "B"
+		} else  if startWeekType == "B" {
+			startWeekType = "A"
+		}
 	}
 
 
-	util.SolidError(200, "OK", startWeekType, "week", w)
+	util.HTTPResponseArr(200, "OK", startWeekType, "week", w)
 }

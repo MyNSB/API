@@ -27,8 +27,8 @@ func getAll() (string, int) {
 // getBetween returns all events betwen a start an an end date
 func getBetween(startDate, endDate string) (string, int) {
 
-	eventStart, parseErrorOne := parseDate(startDate)
-	eventEnd, parseErrorTwo := parseDate(endDate)
+	eventStart, parseErrorOne := util.ParseDate(startDate)
+	eventEnd, parseErrorTwo := util.ParseDate(endDate)
 	if parseErrorOne != nil || parseErrorTwo != nil {
 		return "", 400
 	}
@@ -82,13 +82,6 @@ func sendRequest(url string) (string, int) {
 }
 
 
-// parseDate takes a single date and parses it into the date format that is univsersal within the API
-func parseDate(date string) (time.Time, error) {
-	return fmtdate.Parse("DD-MM-YYYY", date)
-}
-
-
-
 
 
 
@@ -127,7 +120,7 @@ func CalendarRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprout
 			break
 		}
 
-		util.Error(200, "OK", resp, "calendar", w)
+		util.HTTPResponse(200, "OK", resp, "calendar", w)
 		return
 
 	}
@@ -135,6 +128,6 @@ func CalendarRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprout
 	// getAll
 	resp, statusCode := getAll()
 	if statusCode != 200 {
-		util.Error(statusCode, "Here: ", resp, "Here: ", w)
+		util.HTTPResponse(statusCode, "Here: ", resp, "Here: ", w)
 	}
 }

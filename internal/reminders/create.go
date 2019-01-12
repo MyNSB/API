@@ -49,13 +49,6 @@ func (reminder Reminder) insertIntoDB(db *sql.DB, userID string) error {
 
 // UTILITY FUNCTIONS
 
-
-// parseDate parses a date suitable for the API
-func parseDateTime(date string) (time.Time, error) {
-	return fmtdate.Parse("DD-MM-YYYY hh:mm", date)
-}
-
-
 // parseReminder attains the incoming reminder within a HTTP request and returns it as a reminder object
 func parseReminder(r *http.Request) (Reminder, error) {
 
@@ -63,7 +56,7 @@ func parseReminder(r *http.Request) (Reminder, error) {
 
 	body := r.FormValue("Body")
 	subject := r.FormValue("Subject")
-	reminderDateTimeRAW := r.FormValue("Reminder_Date_Time")
+	reminderDateTimeRAW := r.FormValue("Date_Time")
 	tagsTXT := r.FormValue("Tags")
 
 	// Determine if the request is valid
@@ -72,7 +65,7 @@ func parseReminder(r *http.Request) (Reminder, error) {
 	}
 
 	// Parse the time into a suitable format
-	reminderDateTime, _ := parseDateTime(reminderDateTimeRAW)
+	reminderDateTime, _ := util.ParseDateTime(reminderDateTimeRAW)
 	// Parse the json into an actual structure
 	var tags []string
 	err := json.Unmarshal([]byte(tagsTXT), &tags)

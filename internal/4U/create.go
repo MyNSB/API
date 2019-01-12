@@ -20,7 +20,7 @@ import (
 
 // INSERTION FUNCTIONS
 
-// issue.insertIntoDB takes an issue of the 4U Paper, checks weather if it already exists within the database and inserts it into the DB if it doesn't
+// issue.insertIntoDB takes an issue of the 4U Paper, checks whether if it already exists within the database and inserts it into the DB if it doesn't
 func (issue Issue) insertIntoDB(db *sql.DB) error {
 	// Determine if the issue has already been entered into the DB
 	numInstances, _ := util.NumResults(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", issue.Name, issue.Link, issue.TypePost);
@@ -131,10 +131,10 @@ func getIncomingIssue(r *http.Request) (Issue, error) {
 func getIncomingArticle(r *http.Request) (Article, error) {
 	r.ParseMultipartForm(1000000)
 
-	articleName := r.Form.Get("Article_Name")
+	articleName := r.Form.Get("Name")
 	parentIssueIDRaw := r.Form.Get("Parent_ID")
-	pageStartRaw := r.Form.Get("Article_Page")
-	articleDesc := r.Form.Get("Article_Desc")
+	pageStartRaw := r.Form.Get("Page")
+	articleDesc := r.Form.Get("Desc")
 
 	if !(util.IsSet(articleDesc, articleName, parentIssueIDRaw, pageStartRaw)) {
 		return Article{}, errors.New("not all parameters have been provided")

@@ -160,11 +160,11 @@ func UserAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprou
 			return
 		}
 
-		util.SolidError(200, "OK", "Logged In as: "+studentID, "Success!", w)
+		util.HTTPResponseArr(200, "OK", "Logged In as: "+studentID, "Success!", w)
 		return
 	}
 
-	util.SolidError(401, "Unauthorized", "user details provided are invalid", "Unauthorized", w)
+	util.HTTPResponseArr(401, "Unauthorized", "user details provided are invalid", "Unauthorized", w)
 	return
 }
 

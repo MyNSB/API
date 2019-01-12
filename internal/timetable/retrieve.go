@@ -279,5 +279,5 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Param
 
 
 	jsonResp, _ := json.Marshal(resp)
-	util.Error(200, "OK", string(jsonResp), "Response", w)
+	util.HTTPResponse(200, "OK", string(jsonResp), "Response", w)
 }

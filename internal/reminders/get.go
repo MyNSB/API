@@ -104,7 +104,7 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 		tommorrow := time.Now().Add(time.Hour*24)
 
 		reminders, _ := json.Marshal(getReminders(db.DB, yesterday, tommorrow, currUser.Name))
-		util.Error(200, "OK", string(reminders), "Response", w)
+		util.HTTPResponse(200, "OK", string(reminders), "Response", w)
 		return
 	}
 
@@ -112,7 +112,7 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	params, notValid := parseParams(r)
 	if  notValid != nil {
 		reminders, _ := json.Marshal(getReminders(db.DB, params["start"], params["end"], currUser.Name))
-		util.Error(200, "OK", string(reminders), "Response", w)
+		util.HTTPResponse(200, "OK", string(reminders), "Response", w)
 		return
 	}
 
