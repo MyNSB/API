@@ -95,8 +95,8 @@ func getParams(r *http.Request) (map[string]interface{}, error) {
 
 // HTTP HANDLERS
 
-// GetHandler is a http handler that handles requests for the belltimes
-func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// RetrievalHandler is a http handler that handles requests for the belltimes
+func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	allowed, _ := sessions.IsUserAllowed(r, w, "user")
 	if !allowed {

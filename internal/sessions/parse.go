@@ -25,7 +25,11 @@ var store = sessions.NewCookieStore(key)
 func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
 
 	// Attain session
-	session, _ := store.Get(r, "user-data")
+	session, err := store.Get(r, "user-data")
+	if err != nil {
+		return user.User{}, err
+	}
+
 	oneMonth := time.Hour * 24 * 30
 
 	if !(session.Values["token"] == nil) {

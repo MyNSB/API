@@ -70,7 +70,8 @@ func getSubject(studentID string, requestedPeriod string, requestedDay int) (Cla
 	for _, data := range studentTimetable {
 
 		subject := data.(map[string]interface{})
-		if subject["day"].(int) == requestedDay && requestedPeriod == subject["period"].(string) {
+		// Determine if the subject matches the requirements
+		if subject["day"].(float64) == float64(requestedDay) && requestedPeriod == subject["period"].(string) {
 			// Return the matched class
 			return Class{
 				Teacher:   subject["teacher"].(string),
@@ -233,8 +234,8 @@ func GetStudentGrade(StudentID string) (string, error) {
 
 // HTTP HANDLERS
 
-// ExportHandler handles the exporting of a student's timetable
-func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// RetrievalHandler handles the exporting of a student's timetable
+func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	var StudentID string
 	allowed, user := sessions.IsUserAllowed(r, w, "user")

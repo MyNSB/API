@@ -4,11 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"github.com/julienschmidt/httprouter"
-	"github.com/metakeule/fmtdate"
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"time"
@@ -88,8 +86,8 @@ func parseParams(r *http.Request) (map[string]time.Time, error) {
 
 // HTTP HANDLERS
 
-// GetHandler takes a user's request for their reminders and returns all reminders that correspond to their request
-func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// RetrievalHandler takes a user's request for their reminders and returns all reminders that correspond to their request
+func RetrievalHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	currUser, err := sessions.ParseSessions(r, w)
 	if err != nil {
@@ -97,7 +95,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
 	// Get all reminders for today

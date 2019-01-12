@@ -86,7 +86,6 @@ func saveImage(issue Issue) (string, error) {
 	fourUDir := fmt.Sprintf("/4U/%s/%s/%s", issue.TypePost, imageSaveDir, issue.Name)
 	file, err := filesint.CreateFile("assets", fourUDir, issue.PictureHeader.Filename)
 	if err != nil {
-		fmt.Printf("%s", err.Error())
 		return "", errors.New("could not create image")
 	}
 

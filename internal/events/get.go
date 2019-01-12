@@ -132,7 +132,7 @@ func parseDate(time string) (time2.Time, error) {
 // EventRetrievalHandler returns all events according to a http request
 func EventRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
 	requestType, params := parseRequest(r)

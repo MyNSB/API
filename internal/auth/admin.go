@@ -119,7 +119,7 @@ func AdminAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httpro
 	}
 
 	// connect to database
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
 	// Get the details for the incoming request

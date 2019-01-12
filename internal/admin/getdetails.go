@@ -15,20 +15,19 @@ import (
 
 // UTILITY FUNCTIONS
 
-// getDetails takes a user and returns their all the information regarding that user, the assumption here is that the admin is a user
-func getDetails(db *sql.DB, user user.User) string {
+// getDetails takes a user and returns their all the information regarding that user, the assumption here is that the user is an admin
+func getDetails(db *sql.DB, currUser user.User) string {
 
 	// Query for the admin based off their name
-	result, _ := db.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", user.Name)
+	result, _ := db.Query("SELECT admin_name, admin_permissions FROM admins WHERE admin_name = $1", currUser.Name)
 	defer result.Close()
 
-	// Push it into a user
-	details := user.User{}
+	// Push it into the user object
 	for result.Next() {
-		result.Scan(&user.Name, &user.Permissions)
+		result.Scan(&currUser.Name, &currUser.Permissions)
 	}
 
-	response, _ := json2.Marshal(details)
+	response, _ := json2.Marshal(currUser)
 	return string(response)
 }
 
@@ -56,7 +55,7 @@ func DetailRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter
 	}
 
 	// connect to Database
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
 	util.Error(200, "OK", getDetails(db.DB, user), "Response", w)

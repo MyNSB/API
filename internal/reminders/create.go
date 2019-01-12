@@ -109,7 +109,7 @@ func parseReminder(r *http.Request) (Reminder, error) {
 // HTTP HANDLERS
 
 // Create reminders handler
-func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func CreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, _ := sessions.ParseSessions(r, w)
 

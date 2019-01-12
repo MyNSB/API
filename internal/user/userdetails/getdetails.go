@@ -55,16 +55,17 @@ func getDetails(db *sql.DB, user user.User) string {
 
 // HTTP HANDLERS
 
-// GetHandler handles an incoming HTTP request
-func GetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// RetrievalHandler handles an incoming HTTP request
+func RetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	currUser, err := sessions.ParseSessions(r, w)
-
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
+
+	allowed, currUser := sessions.IsUserAllowed(r, w, "user")
+
 	// Determine if generated user is legitimately a user
-	if err != nil || !util.ExistsString(currUser.Permissions, "user") {
+	if !allowed {
 		quickerrors.NotLoggedIn(w)
 		return
 	}

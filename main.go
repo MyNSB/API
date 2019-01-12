@@ -45,46 +45,46 @@ func main() {
 
 	// TIMETABLE ==================
 	// Handle timetable exports
-	router.GET("/api/v1/timetable/Get", timetable.ExportHandler) /**/
+	router.GET("/api/v1/timetable/get", timetable.RetrievalHandler) /**/
 	// END TIMETABLE ==============
 
 	// EVENTS ===================
 	// Handle event creation
-	router.POST("/api/v1/events/Create", events.EventCreationHandler) /**/
-	router.GET("/api/v1/events/Get", events.EventRetrievalHandler)    /**/
-	router.GET("/api/v1/events/calendar/Get", calendar.CalendarRetrievalHandler)
+	router.POST("/api/v1/events/create", events.EventCreationHandler) /**/
+	router.GET("/api/v1/events/get", events.EventRetrievalHandler)    /**/
+	router.GET("/api/v1/events/calendar/get", calendar.CalendarRetrievalHandler)
 	// END EVENTS =====================
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
 	// Handle authentication
 	router.POST("/api/v1/user/auth", auth.UserAuthenticationHandler)     /**/
 	router.POST("/api/v1/admin/auth", auth.AdminAuthenticationHandler)   /**/
-	router.POST("/api/v1/user/Logout", auth.LogoutRequestHandler)        /**/
-	router.GET("/api/v1/user/GetDetails", userdetails.GetHandler)        /**/
-	router.GET("/api/v1/admin/GetDetails", admin.DetailRetrievalHandler) /**/
+	router.POST("/api/v1/user/logout", auth.LogoutRequestHandler)        /**/
+	router.GET("/api/v1/user/getDetails", userdetails.RetrievalHandler)  /**/
+	router.GET("/api/v1/admin/getDetails", admin.DetailRetrievalHandler) /**/
 	// END AUTHENTICATION AND USERS ==================
 
 	// Handler for file server for assets e.t.c
 	router.ServeFiles("/api/v1/assets/*filepath", http.Dir("assets")) /**/
 
 	// BELL TIMES ====================================
-	router.GET("/api/v1/belltimes/Get", belltimes.GetHandler) /**/
+	router.GET("/api/v1/belltimes/get", belltimes.RetrievalHandler) /**/
 	// END BELL TIMES ================================
 
 	// 4U STUFF =======================================
-	router.GET("/api/v1/4U/Get", _4U.IssueRetrievalHandler)              /**/
-	router.POST("/api/v1/4U/Create/Issue", _4U.IssueCreationHandler)     /**/
-	router.POST("/api/v1/4U/Create/Article", _4U.ArticleCreationHandler) /**/
+	router.GET("/api/v1/4U/get", _4U.IssueRetrievalHandler)              /**/
+	router.POST("/api/v1/4U/create/issue", _4U.IssueCreationHandler)     /**/
+	router.POST("/api/v1/4U/create/article", _4U.ArticleCreationHandler) /**/
 	// END 4U STUFF ===================================
 
 	// REMINDERS ======================================
-	router.POST("/api/v1/reminders/Create", reminders.CreateHandler)   /**/
-	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetHandler) /**/
-	router.POST("/api/v1/reminders/Delete", reminders.DeletionHandler) /**/
+	router.POST("/api/v1/reminders/create", reminders.CreationHandler)       /**/
+	router.GET("/api/v1/reminders/get/*reqType", reminders.RetrievalHandler) /**/
+	router.POST("/api/v1/reminders/delete", reminders.DeletionHandler)       /**/
 	// END REMINDERS STUFF ============================
 
 	// WEEK A B STUFF =================================
-	router.GET("/api/v1/week/Get", week.GetHandler) /**/
+	router.GET("/api/v1/week/get", week.GetHandler) /**/
 	// END WEEK A B STUFF =============================
 
 	c := cors.AllowAll().Handler(router)

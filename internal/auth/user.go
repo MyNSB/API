@@ -19,7 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-	"path/filepath"
 )
 
 
@@ -102,22 +101,6 @@ func insertStudentIntoDB(db *sql.DB, studentID string, fName string, lName strin
 }
 
 
-// getStudentGrade takes a student's studentID and returns what year they are in
-func getStudentGrade(studentID string) (string, error) {
-	// Get the GOPATH
-	gopath := util.GetGOPATH()
-	// Set up the timetable
-	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
-	jsonData, err := timetable.GetJson(timetableDir)
-	if err != nil {
-		return "", nil
-	}
-
-	// Get the year
-	return timetable.GetStudentGrade(studentID, jsonData)
-}
-
-
 
 
 
@@ -169,7 +152,7 @@ func UserAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprou
 
 
 		firstName, lastName := getStudentName(authResponse)
-		studentGrade, err := getStudentGrade(studentID)
+		studentGrade, err := timetable.GetStudentGrade(studentID)
 		insertStudentIntoDB(db.DB, studentID, firstName, lastName, studentGrade)
 
 		if err != nil {
@@ -182,6 +165,7 @@ func UserAuthenticationHandler(w http.ResponseWriter, r *http.Request, _ httprou
 	}
 
 	util.SolidError(401, "Unauthorized", "user details provided are invalid", "Unauthorized", w)
+	return
 }
 
 

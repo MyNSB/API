@@ -30,10 +30,12 @@ var DB *sql.DB
 
 
 // connect takes a connection configuration and connects to the psql database with it, the database connection is reflected within the db.DB object
-func (connection *Connection) connect() error {
+func (connection Connection) connect() error {
+
+	var err error
 
 	// connect to the database
-	DB, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+	DB, err = sql.Open("postgres", fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		connection.Host, connection.Port, connection.User, connection.Password, connection.DatabaseName))
 	if err != nil {
 		return errors.New("could not connect to the database")
@@ -78,7 +80,7 @@ func getConnectionDetails() (Connection, error) {
 }
 
 
-// getUserPswd returns the pswd of the user inputted, this password is read off the /user pass/user.txt file
+// getUserPswd returns the pswd of the user inputted, this password is read off the /user pass/student.txt file
 func getUserPswd(user string) string {
 	if pwd, err := filesint.DataDump("sensitive", fmt.Sprintf("/user pass/%s.txt", user)); err == nil {
 		return string(pwd)

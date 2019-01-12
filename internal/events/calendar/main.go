@@ -1,7 +1,6 @@
 package calendar
 
 import (
-	"errors"
 	"fmt"
 	"github.com/Azure/go-ntlmssp"
 	"github.com/julienschmidt/httprouter"

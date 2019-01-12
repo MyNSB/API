@@ -107,7 +107,7 @@ func parseDate(date string) (time.Time, error) {
 func IssueRetrievalHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	// Start up database
-	db.Conn("user")
+	db.Conn("student")
 	defer db.DB.Close()
 
 	// Params sent to us by the user
