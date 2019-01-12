@@ -61,10 +61,10 @@ func getAll(db *sql.DB) ([]Event, error) {
 func performRequest(db *sql.DB, query string, args ...interface{}) ([]Event, error) {
 
 	rows, err := db.Query(query, args...)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var allEvents []Event
 
