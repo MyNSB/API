@@ -95,6 +95,82 @@
 		{
 			"path": "mynsb-api",
 			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/4U",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/admin",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/auth",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/belltimes",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/daemon/UpdateStudentYear",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/db",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/events",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/events/calendar",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/filesint",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/jwt",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/quickerrors",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/reminders",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/sessions",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/timetable",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/user",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/user/userdetails",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/util",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/internal/week",
+			"revision": ""
+		},
+		{
+			"path": "mynsb-api/tests",
+			"revision": ""
 		}
 	],
 	"rootPath": "mynsb-api"

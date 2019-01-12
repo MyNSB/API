@@ -62,8 +62,8 @@ func parseParams(r *http.Request) (map[string]time.Time, error) {
 	startTime := r.URL.Query().Get("Start_Time")
 	endTime := r.URL.Query().Get("End_Time")
 
-	start, parseErrorOne := parseDateTime(startTime)
-	end, parseErrorTwo := parseDateTime(endTime)
+	start, parseErrorOne := util.ParseDateTime(startTime)
+	end, parseErrorTwo := util.ParseDateTime(endTime)
 
 	if parseErrorOne != nil || parseErrorTwo != nil {
 		return nil, errors.New("could not parse datetimes")

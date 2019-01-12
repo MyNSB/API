@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/julienschmidt/httprouter"
-	"github.com/metakeule/fmtdate"
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"

@@ -6,12 +6,10 @@ import (
 	"errors"
 	"github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq" // Extension of the database/sql package
-	"github.com/metakeule/fmtdate"
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/util"
 	"net/http"
-	"time"
 )
 
 
