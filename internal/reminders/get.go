@@ -12,84 +12,113 @@ import (
 	"mynsb-api/internal/util"
 	"net/http"
 	"time"
+	"errors"
 )
 
-func getReminders(db *sql.DB, start time.Time, end time.Time, user user.User) []Reminder {
-	res, err := db.Query("SELECT * FROM reminders WHERE reminder_date_time BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP AND student_id = $3 ORDER BY reminder_date_time ASC",
-		start, end, user.Name)
 
-	if err != nil {
-		panic(err)
-	}
 
-	var container []Reminder
+// RETRIEVAL FUNCTIONS
+
+// getReminders returns all reminders from a specific user between two provided dates
+func getReminders(db *sql.DB, start time.Time, end time.Time, studentID string) []Reminder {
+	res, _ := db.Query("SELECT * FROM reminders WHERE reminder_date_time BETWEEN $1::TIMESTAMP AND $2::TIMESTAMP AND student_id = $3 ORDER BY reminder_date_time ASC",
+		start, end, studentID)
+	defer res.Close()
+
+
+	// Response array
+	var response []Reminder
 
 
 	for res.Next() {
+		// Core data
 		var headers []byte
 		var studentID int
 		var tags []byte
 
-
 		reminder := Reminder{}
 
-		// Scan into the containers
 		res.Scan(&reminder.ID, &studentID, &headers, &reminder.Body, &tags, &reminder.DateTime)
 
-
-		// Start converting it into the correct types
-		// Headers
 		json.Unmarshal(headers, &reminder.Headers)
-		// Tags
 		json.Unmarshal(tags, &reminder.Tags)
-		// Push into array
-		container = append(container, reminder)
+		response = append(response, reminder)
 	}
 
-	res.Close()
-	return container
+	return response
 }
 
-// Get reminders handler
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+// parseParams takes the rqeust and parses and reads the start and end times
+func parseParams(r *http.Request) (map[string]time.Time, error) {
+
+	startTime := r.URL.Query().Get("Start_Time")
+	endTime := r.URL.Query().Get("End_Time")
+
+	start, parseErrorOne := parseDateTime(startTime)
+	end, parseErrorTwo := parseDateTime(endTime)
+
+	if parseErrorOne != nil || parseErrorTwo != nil {
+		return nil, errors.New("could not parse datetimes")
+	}
+
+
+	return map[string]time.Time{
+		"start": start,
+		"end": end,
+	}, nil
+}
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// GetHandler takes a user's request for their reminders and returns all reminders that correspond to their request
 func GetHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
-	user, err := sessions.ParseSessions(r, w)
-
+	currUser, err := sessions.ParseSessions(r, w)
 	if err != nil {
 		quickerrors.NotLoggedIn(w)
 		return
 	}
 
 	db.Conn("user")
-
-	// Close that database at the end
 	defer db.DB.Close()
 
+	// Get all reminders for today
 	if ps.ByName("reqType") == "/Today" {
-		reminders, _ := json.Marshal(getReminders(db.DB, time.Now().Add(time.Hour*-24), time.Now().Add(time.Hour*24), user))
+		yesterday := time.Now().Add(time.Hour*-24)
+		tommorrow := time.Now().Add(time.Hour*24)
+
+		reminders, _ := json.Marshal(getReminders(db.DB, yesterday, tommorrow, currUser.Name))
 		util.Error(200, "OK", string(reminders), "Response", w)
 		return
-	} else {
-		// Get the required fields
-		startTime := r.URL.Query().Get("Start_Time")
-		endTime := r.URL.Query().Get("End_Time")
-
-		if util.IsSet(startTime, endTime) {
-
-			// Start converting the dates to the correct format
-			startTimeDate, err1 := fmtdate.Parse("DD-MM-YYYY", startTime)
-			endTimeDate, err2 := fmtdate.Parse("DD-MM-YYYY", endTime)
-			if err1 != nil || err2 != nil {
-				quickerrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
-			}
-
-			reminders, _ := json.Marshal(getReminders(db.DB, startTimeDate, endTimeDate, user))
-			util.Error(200, "OK", string(reminders), "Response", w)
-
-		} else {
-			quickerrors.MalformedRequest(w, "Missing parameters, check the API documentation")
-			return
-		}
 	}
 
+	// Looks like they have a start and an end time
+	params, notValid := parseParams(r)
+	if  notValid != nil {
+		reminders, _ := json.Marshal(getReminders(db.DB, params["start"], params["end"], currUser.Name))
+		util.Error(200, "OK", string(reminders), "Response", w)
+		return
+	}
+
+
+
+	quickerrors.MalformedRequest(w, "could not determine request type")
 }

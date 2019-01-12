@@ -12,8 +12,21 @@ import (
 	"strconv"
 )
 
-func deleteEvent(db *sql.DB, reminderId, studentID int) error {
-	_, err := db.Exec("DELETE FROM reminders WHERE reminder_id = $1 AND student_id = $2", reminderId, studentID)
+
+// DELETION FUNCTIONS
+
+// deleteReminder takes a reminderID and deletes the reminder associated with that ID, the studentID is added for security
+// in case someone tries to delete a reminder that is not theirs
+func deleteReminder(db *sql.DB, reminderIdRAW, studentIDRAW string) error {
+
+	// Convert our ids to integers
+	studentID, _ := strconv.Atoi(studentIDRAW)
+	reminderID, err := strconv.Atoi(reminderIdRAW)
+	if err != nil {
+		errors.New("reminderID is not an integer")
+	}
+
+	_, err = db.Exec("DELETE FROM reminders WHERE reminder_id = $1 AND student_id = $2", reminderID, studentID)
 	if err != nil {
 		return errors.New("user does not own this reminder")
 	}
@@ -21,45 +34,44 @@ func deleteEvent(db *sql.DB, reminderId, studentID int) error {
 	return nil
 }
 
-func DeleteHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	if origin := r.Header.Get("Origin"); origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-	}
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-	r.ParseForm()
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
+// DeletionHandler is a HTTP handler that handles the deletion of a requested user event
+func DeletionHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	db.Conn("admin")
 	defer db.DB.Close()
 
-	user, err := sessions.ParseSessions(r, w)
-	if err != nil || !util.ExistsString(user.Permissions, "user") {
+	allowed, user := sessions.IsUserAllowed(r, w, "user")
+	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
 
-	// Get the post vars
-	reminderIDTXT := r.Form.Get("Reminder_ID")
 
-	// Determine if the reminder id is really set or not
-	if util.NonNull(reminderIDTXT) {
-
-		// Begin the conversion from text to int for all the ids
-		studentID, _ := strconv.Atoi(user.Name)
-		reminderID, err := strconv.Atoi(reminderIDTXT)
-		if err != nil {
-			quickerrors.MalformedRequest(w, "Reminder ID is not an integer")
-			return
-		}
-
-		deleteEvent(db.DB, reminderID, studentID)
-		quickerrors.OK(w)
-
-	} else {
+	r.ParseForm()
+	reminderID := r.Form.Get("Reminder_ID")
+	if util.NonNull(reminderID) {
 		quickerrors.MalformedRequest(w, "Missing parameters, please refer to the API documentation")
 		return
 	}
+
+
+
+	err := deleteReminder(db.DB, reminderID, user.Name)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "User does not own requested reminder or reminder ID is not an integer")
+		return
+	}
+	quickerrors.OK(w)
+
 }

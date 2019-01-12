@@ -9,23 +9,26 @@ import (
 	"mynsb-api/internal/db"
 	"mynsb-api/internal/quickerrors"
 	"mynsb-api/internal/sessions"
-	"mynsb-api/internal/user"
 	"mynsb-api/internal/util"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func CreateReminder(db *sql.DB, user user.User, reminder Reminder) error {
-	// Convert the user ID into an integer
-	studentID, _ := strconv.Atoi(user.Name)
-	jsonTXT, _ := json.Marshal(reminder.Tags)
-	headersTXT, _ := json.Marshal(reminder.Headers)
+
+// CREATION FUNCTIONS
+
+// insertIntoDB takes a reminder and inserts it into the database for us
+func (reminder Reminder) insertIntoDB(db *sql.DB, userID string) error {
+
+	// Convert the user ID into an integer, convert the headers and tags into json
+	studentID, _ := strconv.Atoi(userID)
+	tagsJSON, _ := json.Marshal(reminder.Tags)
+	headersJSON, _ := json.Marshal(reminder.Headers)
 
 	// Push into database
 	_, err := db.Exec("INSERT INTO reminders (student_id, headers, body, tags, reminder_date_time)  VALUES ($1, $2, $3, $4, $5::TIMESTAMP)",
-		studentID, headersTXT, reminder.Body, jsonTXT, reminder.DateTime)
-
+		studentID, headersJSON, reminder.Body, tagsJSON, reminder.DateTime)
 	if err != nil {
 		return errors.New("oopsie, doopsie, doo")
 	}
@@ -33,70 +36,95 @@ func CreateReminder(db *sql.DB, user user.User, reminder Reminder) error {
 	return nil
 }
 
+
+
+
+
+
+
+
+
+
+
+
+// UTILITY FUNCTIONS
+
+
+// parseDate parses a date suitable for the API
+func parseDateTime(date string) (time.Time, error) {
+	return fmtdate.Parse("DD-MM-YYYY hh:mm", date)
+}
+
+
+// parseReminder attains the incoming reminder within a HTTP request and returns it as a reminder object
+func parseReminder(r *http.Request) (Reminder, error) {
+
+	r.ParseForm()
+
+	body := r.FormValue("Body")
+	subject := r.FormValue("Subject")
+	reminderDateTimeRAW := r.FormValue("Reminder_Date_Time")
+	tagsTXT := r.FormValue("Tags")
+
+	// Determine if the request is valid
+	if !util.IsSet(body, subject, reminderDateTimeRAW, tagsTXT) {
+		return Reminder{}, errors.New("invalud request")
+	}
+
+	// Parse the time into a suitable format
+	reminderDateTime, _ := parseDateTime(reminderDateTimeRAW)
+	// Parse the json into an actual structure
+	var tags []string
+	err := json.Unmarshal([]byte(tagsTXT), &tags)
+	if err != nil {
+		return Reminder{}, err
+	}
+
+	// Generate a map of the headers associated with the reminder
+	headers := map[string]interface{} {
+		"Content-Length": len(body),
+		"Tags-Length": len(tags),
+		"Created-At": time.Now().String(),
+		"Subject": subject,
+	}
+
+	return Reminder{
+		Headers:  headers,
+		Body:     body,
+		Tags:     tags,
+		DateTime: reminderDateTime,
+	}, nil
+}
+
+
+
+
+
+
+
+
+
+
+
+// HTTP HANDLERS
+
 // Create reminders handler
 func CreateHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	user, _ := sessions.ParseSessions(r, w)
 
-	r.ParseForm()
-
 	// Login into database
 	db.Conn("admin")
-
-	// Close the connection at the end
 	defer db.DB.Close()
 
-	// Get the post vars
-	body := r.FormValue("Body")
-	subject := r.FormValue("Subject")
-	reminderDateTime := r.FormValue("Reminder_Date_Time")
-	tagsTXT := r.FormValue("Tags")
-
-
-	// Get the required fields
-	if util.IsSet(body, reminderDateTime, tagsTXT, subject) {
-		// Decode the tags
-		var tags []string
-		err := json.Unmarshal([]byte(tagsTXT), &tags)
-		if err != nil {
-			quickerrors.MalformedRequest(w, "Invalid Tags sent, must be in JSON format")
-			return
-		}
-
-		// Start creating the headers
-		var headers = make(map[string]interface{})
-		headers["Content-Length"] = len(body)
-		headers["Tags-Length"] = len(tags)
-		headers["Created-At"] = time.Now().String()
-		headers["Subject"] = subject
-
-		// Parse the given date time
-		reminderDateTimeVal, err := fmtdate.Parse("DD-MM-YYYY hh:mm", reminderDateTime)
-		if err != nil {
-			quickerrors.MalformedRequest(w, "Dates are invalid, must follow the following format: DD-MM-YYYY hh:mm")
-			return
-		}
-
-		// Push everything into a reminders type
-		reminder := Reminder{
-			Headers:  headers,
-			Body:     body,
-			Tags:     tags,
-			DateTime: reminderDateTimeVal,
-		}
-
-		// Push everything into the database
-		err = CreateReminder(db.DB, user, reminder)
-		if err != nil {
-			quickerrors.MalformedRequest(w, "Unable to create event, this could be because the date time your provided is in the past")
-			return
-		}
-
-		quickerrors.OK(w)
-		return
+	requestedReminder, err := parseReminder(r)
+	if err != nil {
+		quickerrors.MalformedRequest(w, "Missing or invalid parameters, check the API Documentation")
 	}
 
-	quickerrors.MalformedRequest(w, "Missing Parameters, check the API Documentation")
-	return
-
+	err = requestedReminder.insertIntoDB(db.DB, user.Name)
+	if err != nil {
+		quickerrors.InternalServerError(w)
+		return
+	}
 }

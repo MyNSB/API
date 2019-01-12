@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"encoding/json"
+	"mynsb-api/internal/util"
 )
 
 type User struct {
@@ -22,4 +23,10 @@ func (user *User) ScanSQLIntoAdmin(rows *sql.Rows) {
 	// Unmarshal the perms
 	json.Unmarshal(perms, &user.Permissions)
 
+}
+
+
+// .IsAdmin takes a user entity and determines if the current user is an admin
+func (user *User) IsAdmin() bool {
+	return util.ExistsString(user.Permissions, "admin")
 }

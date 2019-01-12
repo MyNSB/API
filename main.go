@@ -50,9 +50,9 @@ func main() {
 
 	// EVENTS ===================
 	// Handle event creation
-	router.POST("/api/v1/events/Create", events.CreateHandler) /**/
-	router.GET("/api/v1/events/Get", events.GetHandler) /**/
-	router.GET("/api/v1/events/calendar/Get", calendar.GetHandler)
+	router.POST("/api/v1/events/Create", events.EventCreationHandler) /**/
+	router.GET("/api/v1/events/Get", events.EventRetrievalHandler)    /**/
+	router.GET("/api/v1/events/calendar/Get", calendar.CalendarRetrievalHandler)
 	// END EVENTS =====================
 
 	// AUTHENTICATION AND USERS AND ADMINS ======================
@@ -78,9 +78,9 @@ func main() {
 	// END 4U STUFF ===================================
 
 	// REMINDERS ======================================
-	router.POST("/api/v1/reminders/Create", reminders.CreateHandler) /**/
+	router.POST("/api/v1/reminders/Create", reminders.CreateHandler)   /**/
 	router.GET("/api/v1/reminders/Get/*reqType", reminders.GetHandler) /**/
-	router.POST("/api/v1/reminders/Delete", reminders.DeleteHandler) /**/
+	router.POST("/api/v1/reminders/Delete", reminders.DeletionHandler) /**/
 	// END REMINDERS STUFF ============================
 
 	// WEEK A B STUFF =================================
