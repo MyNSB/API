@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 )
 
-// TODO: Refactor spaghetti code
 
 
 // AUTHENTICATION FUNCTIONS
@@ -115,7 +114,7 @@ func getStudentGrade(studentID string) (string, error) {
 	}
 
 	// Get the year
-	return timetable.GetYear(studentID, jsonData)
+	return timetable.GetStudentGrade(studentID, jsonData)
 }
 
 

@@ -20,190 +20,129 @@ import (
 
 
 
-
-/*
-	Data Holders =============
-*/
-// Class holds a certain class during any day and any given period
+// Datastructure for holding a class
 type Class struct {
 	Teacher   string
 	ClassRoom string
 	Subject   string
 	Period    string
 }
-
 type TimeTable []Class
-
-// Would represent something like: {1 = monday week A}
-/*
-	END Data Holders =============
-*/
+var	timetableJSONDump map[string]interface{}
 
 
 
+// init function reads all the timetable data into a data structure for easy access
+func init() {
+
+	// Get gopath and build a timetable directory
+	gopath := util.GetGOPATH()
+	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
+
+	// Read the file and dump it into our data structure
+	var jsonDataBuffer []byte
+	jsonDataBuffer, _ = ioutil.ReadFile(timetableDir)
+	json.Unmarshal(jsonDataBuffer, &timetableJSONDump)
+}
 
 
 
 
 
 
-/*
-	CORE FUNCTIONS =============================
-*/
-/* GetSubject returns the subject that the user has requested through a given period and a given day
- 		@params;
-			StudentID string
-			Period string,
-			Day int,
-			filepath string
-*/
-func GetSubject(StudentID string, Period string, Day int, filepath string) (Class, error) {
 
-	// Create a data holder
-	var data map[string]interface{}
-	var err error
 
-	if data, err = GetJson(filepath); err != nil {
-		return Class{}, errors.New("could not parse json")
-	}
 
-	// Read from the data container
-	studentTimetables := data["student_timetables"].(map[string]interface{})
-	// Convert this into a array of interfaces
-	// Student timetables look like: "441567081": {
-	// 												{},
-	// 												{},
-	// 												{}
-	// 											  }
-	studentTimetable := studentTimetables[StudentID].([]interface{})
 
-	// Iterate through timetable array of all the students
+
+
+// RETRIEVAL FUNCTIONS
+
+// getSubject returns a subject from the specified students timetable, the subject is matched based off the requested
+// period and day
+func getSubject(studentID string, requestedPeriod string, requestedDay int) (Class, error) {
+
+	// Read data structure and extrac the student's timetables
+	studentTimetables := timetableJSONDump["student_timetables"].(map[string]interface{})
+	studentTimetable := studentTimetables[studentID].([]interface{})
+
+	// Iterate over every day in the students timetable, see timetable_sample.json to see how the timetable is structured
 	for _, data := range studentTimetable {
-		details := data.(map[string]interface{})
-		if details["day"].(float64) == float64(Day) && Period == details["period"].(string) {
-			// Parse the details to turn it into a class
+
+		subject := data.(map[string]interface{})
+		if subject["day"].(int) == requestedDay && requestedPeriod == subject["period"].(string) {
+			// Return the matched class
 			return Class{
-				Teacher:   details["teacher"].(string),
-				ClassRoom: details["room"].(string),
-				Subject:   details["class"].(string),
-				Period:    Period,
+				Teacher:   subject["teacher"].(string),
+				ClassRoom: subject["room"].(string),
+				Subject:   subject["class"].(string),
+				Period:    requestedPeriod,
 			}, nil
 		}
 	}
 
-	// Return error if it does not exist
 	return Class{}, errors.New("user id or period or day does not exist")
-
 }
 
 
+// retrieveEntireTimetable gets the entire table for a student given their student id
+func retrieveEntireTimetable(studentID string) (interface{}, error) {
 
-/* getYear returns the year a specific user is in, it is only really used during authentication when the user details are stored in the database
-@params;
-	StudentID string
-	filepath string
-*/
-func GetYear(StudentID string, data map[string]interface{}) (string, error) {
-	// Get the timetable for the correct user
-	student, err := RetrieveAll(StudentID, data)
-	if err != nil {
-		return "", err
-	}
-
-	// Get the year off the first class using   r e g e x
-	rawJson, _ := json.Marshal(student)
-
-	firstSubject, _ := jsonparser.GetString(rawJson, "[0]", "class")
-	// r e g e x  that boi
-	var numberRegex = regexp.MustCompile(`\d+`)
-
-	return string(numberRegex.Find([]byte(firstSubject))[0]), nil
-}
-
-
-
-
-/* RetrieveAll returns the timetable for a particular user
-@params;
-	StudentID string
-	filepath string
-
-*/
-func RetrieveAll(StudentID string, data map[string]interface{}) (interface{}, error) {
 	// Get the timetables
-	studentTimetables := data["student_timetables"].(map[string]interface{})
+	studentTimetables := timetableJSONDump["student_timetables"].(map[string]interface{})
 
 	// Get the currently logged in user's timetable through their user ID
-	if _, ok := studentTimetables[StudentID]; ok {
-		return studentTimetables[StudentID], nil
+	if _, ok := studentTimetables[studentID]; ok {
+		return studentTimetables[studentID], nil
 	}
 
 	return nil, errors.New("user or period or day does not exist")
 }
 
 
+// getWholeDay returns a student's timetable for the entire day
+func getWholeDay(requestedDay int, studentID string) ([]Class, error) {
 
+	var timetable []Class
 
-/* GetWholeDay returns the timetable for a user on a given day
-@params;
-	day int
-	filepath string
-*/
-func GetWholeDay(day int, studentID string, data map[string]interface{}) ([]Class, error) {
-	// timetable type that we start with
-	var timetables []Class
+	allTimetables := timetableJSONDump["student_timetables"].(map[string]interface{})
+	studentTimetable := allTimetables[studentID].([]interface{})
 
-	studentTimetables := data["student_timetables"].(map[string]interface{})
-	studentsTimetable := studentTimetables[studentID].([]interface{})
+	for _, subject := range studentTimetable {
+		// Extract the subject information
+		subjectInfo := subject.(map[string]interface{})
 
-	// Iterate through timetable array of all the students
-	for _, data := range studentsTimetable {
-		details := data.(map[string]interface{})
-		if details["day"].(float64) == float64(day) {
-			// Handle unsupervised periods
+		// Determine if this day matches the day requested by the user
+		if subjectInfo["day"].(float64) == float64(requestedDay) {
+
+			// Handle unsupervised periods, if there is no teacher entry that means the period is unsupervised
 			teacher := "Unsupervised"
-			if _, ok := details["teacher"]; ok {
-				teacher = details["teacher"].(string)
+			if _, ok := subjectInfo["teacher"]; ok {
+				teacher = subjectInfo["teacher"].(string)
 			}
 
 			// Create timetable
-			timetables = append(timetables, Class{
+			timetable = append(timetable, Class{
 				Teacher:   teacher,
-				ClassRoom: details["room"].(string),
-				Subject:   details["class"].(string),
-				Period:    details["period"].(string),
+				ClassRoom: subjectInfo["room"].(string),
+				Subject:   subjectInfo["class"].(string),
+				Period:    subjectInfo["period"].(string),
 			})
-		}
-	}
 
-	jsonL := Class{}
-	// This now needs to be sorted
-	timetableMask := make(map[int]Class)
-	for _, timetableJson := range timetables {
-		if timetableJson.Period == "RC" {
-			jsonL = timetableJson
-			continue
+
+			// due to the consecutive nature of the timetables we can reduce the number of iterations after the first subject that matches our day has been found
+			// Check the timetablesample.json file
+		} else if len(timetable) > 0 {
+			break
 		}
 
-		p, _ := strconv.Atoi(timetableJson.Period)
-		// Append this period where it should be
-		timetableMask[p] = timetableJson
 	}
-	// Sort this mask
-	periodNo := getMaxKey(timetableMask)
-	finMask := make([]Class, periodNo)
-	for x := range timetableMask {
-		finMask[x-1] = timetableMask[x]
-	}
-	ln := finMask[:]
-	ln = append(ln, jsonL)
 
-	return ln, nil
+	timetableResponse := sortTimetable(timetable)
+
+	return timetableResponse, nil
 }
 
-/*
-	END CORE FUNCTIONS =============================
-*/
 
 
 
@@ -212,13 +151,12 @@ func GetWholeDay(day int, studentID string, data map[string]interface{}) ([]Clas
 
 
 
-/*
-	UTIL FUNCTIONS =========================
-*/
-/* getMaxKey returns the maximum key in a map
-@params;
-	map[int]interface{}
-*/
+
+
+
+// UTILITY FUNCTIONS
+
+// getMaxKey returns the largest key in a map of integers
 func getMaxKey(list map[int]Class) int {
 	max := -9999999
 
@@ -232,32 +170,54 @@ func getMaxKey(list map[int]Class) int {
 }
 
 
+// sortTimetables sorts the timetables into an order that the user will understand
+func sortTimetable(timetable []Class) []Class {
 
+	initialClass := Class{}
 
-/* GetJson retrieves the json dump as a map of strings and interfaces
-@params;
-	filepath string
-*/
-func GetJson(filepath string) (map[string]interface{}, error) {
-	// Get the jsonpath
-	jsonPath := filepath
-	// Holders for stuff like json data and errors
-	var jsonData []byte
-	var err error
+	// Construct a mask that dictates the "desired" arrangement for the timetable
+	timetableMask := make(map[int]Class)
+	for _, timetableJson := range timetable {
+		if timetableJson.Period == "RC" {
+			initialClass = timetableJson
+			continue
+		}
 
-	// Read everything from the timetable export
-	if jsonData, err = ioutil.ReadFile(jsonPath); err != nil {
-		return nil, errors.New("could not open timetable dump")
+		p, _ := strconv.Atoi(timetableJson.Period)
+		// Append this period where it should be
+		timetableMask[p] = timetableJson
 	}
 
-	// Create a data holder
-	var data map[string]interface{}
-	if err := json.Unmarshal(jsonData, &data); err != nil {
-		return nil, errors.New("could not convert to JSON")
+	// Match the actual timetable with the mask
+	periodNo := getMaxKey(timetableMask)
+	finMask := make([]Class, periodNo)
+	for x := range timetableMask {
+		finMask[x-1] = timetableMask[x]
 	}
+	finalTimetable := finMask[:]
+	finalTimetable = append(finalTimetable, initialClass)
 
-	// Otherwise return the json data as a map
-	return data, nil
+	return finalTimetable
+}
+
+
+// GetStudentGrade returns the grade a student with a certain student ID is int
+func GetStudentGrade(StudentID string) (string, error) {
+
+	// Get the entire timetable for the current user
+	student, err := retrieveEntireTimetable(StudentID)
+	if err != nil {
+		return "", err
+	}
+	// Marshall the result so we can perform a regex query on it
+	studentTimetaleJSON, _ := json.Marshal(student)
+
+	// Get the first subject in the students timetables
+	firstSubject, _ := jsonparser.GetString(studentTimetaleJSON, "[0]", "class")
+	var gradeMatcher = regexp.MustCompile(`\d+`)
+
+	// Return first instance of the grade
+	return string(gradeMatcher.Find([]byte(firstSubject))[0]), nil
 }
 
 
@@ -269,61 +229,45 @@ func GetJson(filepath string) (map[string]interface{}, error) {
 
 
 
-/*
-	END UTIL FUNCTIONS =====================
-*/
 
-// Http handler for timetable exports
-// Should be moved somewhere else
+
+// HTTP HANDLERS
+
+// ExportHandler handles the exporting of a student's timetable
 func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	// Get the GOPATH
-	gopath := util.GetGOPATH()
-	// Set up the timetable
-	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
-	// Read the directory and copy the data into an interface
-	data, err := GetJson(timetableDir)
-	if err != nil {
-		quickerrors.InternalServerError(w)
-	}
+
 	var StudentID string
-
-
 	allowed, user := sessions.IsUserAllowed(r, w, "user")
 	if !allowed {
 		quickerrors.NotEnoughPrivileges(w)
 		return
 	}
-	// Set the user id variable from the user
-	StudentID = user.Name
-	// Overview........
-	// Get the user details
+
 	Period := r.URL.Query().Get("Period")
 	Day := r.URL.Query().Get("Day")
 
-	// Determine the type of request being sent
-	// PLEASE KEEP THIS! I lIKE THIS MEME
-	reqType := map[bool]interface{}{true: 0, false: map[bool]int{true: 1, false: 2}[Period == "" && Day != ""]}[Period == "" && Day == ""] // 0: GetAll, 1: GetDay, 2: GetSubject
+	StudentID = user.Name
+
+	// Determine the request type, btw, this code is meant to be a meme:p its pre much a ternary
+	reqType := map[bool]interface{}{true: 0, false: map[bool]int{true: 1, false: 2}[Period == "" && Day != ""]}[Period == "" && Day == ""] // 0: GetAll, 1: GetDay, 2: getSubject
 
 	// GLOBAL data
 	var resp interface{}
 	var errGlob error
 
-	// Perform a request given the data we are given
+
 	switch reqType {
 	case 1:
-		// Convert the day
+		// Convert the day into an integer
 		day, _ := strconv.Atoi(Day)
-		// Attain data
-		resp, errGlob = GetWholeDay(day, StudentID, data)
+		resp, errGlob = getWholeDay(day, StudentID)
 		break
 	case 2:
 		day, _ := strconv.Atoi(Day)
-		// Attain data
-		resp, errGlob = GetSubject(StudentID, Period, day, timetableDir)
+		resp, errGlob = getSubject(StudentID, Period, day)
 		break
 	default:
-		// Attain data
-		resp, errGlob = RetrieveAll(StudentID, data)
+		resp, errGlob = retrieveEntireTimetable(StudentID)
 		break
 	}
 
@@ -332,8 +276,7 @@ func ExportHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		return
 	}
 
-	// Return that
+
 	jsonResp, _ := json.Marshal(resp)
-	// Return response
 	util.Error(200, "OK", string(jsonResp), "Response", w)
 }
