@@ -10,10 +10,12 @@ import (
 	"mynsb-api/internal/events"
 	"mynsb-api/internal/events/calendar"
 	"mynsb-api/internal/reminders"
+	"golang.org/x/crypto/acme/autocert"
 	"mynsb-api/internal/user/userdetails"
 	"mynsb-api/internal/timetable"
 	"mynsb-api/internal/week"
 	"net/http"
+	"crypto/tls"
 )
 
 // NotFoundHandler deals is the response to a 404 request
@@ -89,6 +91,25 @@ func main() {
 
 	c := cors.AllowAll().Handler(router)
 
-	// Begin listening on port 8080
-	http.ListenAndServe("0.0.0.0:8080", c)
+
+	// SSL Policy
+	// Build the autocert manager, see: https://letsencrypt.org
+	manager := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist("mynsb.nsbvisions.com", "acme-test.tmtk.net"),
+		Cache:      autocert.DirCache("certs"),
+	}
+
+	// Build the https server
+	server := &http.Server{
+		Addr: ":https",
+		TLSConfig: &tls.Config{
+			GetCertificate: manager.GetCertificate,
+		},
+		Handler: c,
+	}
+
+
+	// Start SSL and begin listening
+	server.ListenAndServeTLS("", "")
 }
