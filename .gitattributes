@@ -1,2 +1,2 @@
-*.html text
-*.css text
+*.html linguist-vendored
+*.css linguist-vendored
