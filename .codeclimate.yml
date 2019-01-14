@@ -2,14 +2,15 @@ engines:
   govet:
     enabled: true
 
-exclude_patterns:
-- "*js"
-- "*html"
-- "*css"
 
 ratings:
   paths:
     - "**.go"
+
+
+exclude_patterns:
+- "static/"
+- "vendor/"
 
 
 version: "2"
