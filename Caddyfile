@@ -1,5 +1,6 @@
 mynsb.nsbvisions.com {
         proxy /api 35.244.66.186:8080 {
+
                 except /static
         }
 

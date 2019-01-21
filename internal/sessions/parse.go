@@ -9,6 +9,8 @@ import (
 	"mynsb-api/internal/util"
 	"net/http"
 	"time"
+	"mynsb-api/internal/db"
+	"database/sql"
 )
 
 
@@ -24,6 +26,13 @@ var store = sessions.NewCookieStore(key)
 // ParseSessions takes a http request, extracts the session data from it, parses it and returns a user object
 func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
 
+	// Connect to the database
+	db.Conn("admin")
+	defer db.DB.Close()
+
+	// Dead variable
+	dead := -1
+
 	// Attain session
 	session, err := store.Get(r, "user-data")
 	if err != nil {
@@ -31,7 +40,6 @@ func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
 	}
 
 	oneMonth := time.Hour * 24 * 30
-
 	if !(session.Values["token"] == nil) {
 
 		currUser, err := jwt.ReadJWT(session.Values["token"].(string))
@@ -40,8 +48,17 @@ func ParseSessions(r *http.Request, w http.ResponseWriter) (user.User, error) {
 		}
 
 		session.Options.MaxAge = int(time.Duration(oneMonth).Seconds())
-		session.Save(r, w)
 
+		// Determine if the user is in the DB
+		if !isUserInDB(db.DB, currUser) {
+			// Deregister the session
+			session.Options.MaxAge = dead
+			session.Save(r, w)
+
+			return user.User{}, errors.New("session is invalid, please authenticate again")
+		}
+
+		session.Save(r, w)
 		return jwtDataToUser(currUser), nil
 	}
 
@@ -58,6 +75,8 @@ func GenerateSession(w http.ResponseWriter, r *http.Request, token string) error
 		return err
 	}
 
+	session.Options.Secure = true
+	session.Options.HttpOnly = true
 	session.Values["token"] = token
 	session.Options.Path = "/"
 	session.Save(r, w)
@@ -110,4 +129,18 @@ func jwtDataToUser(details jwt.JWTData) user.User {
 		Password:    details.Password,
 		Permissions: details.Permissions,
 	}
+}
+
+
+// isUserInDB checks if the user object actually exists in the database
+func isUserInDB(db *sql.DB, userData jwt.JWTData) bool {
+
+	// Get the number of results
+	numUsers, err := util.NumResults(db, "SELECT * FROM students WHERE student_id = ?", userData.User)
+
+	if numUsers == 0 || err != nil {
+		return false
+	}
+
+	return true
 }

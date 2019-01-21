@@ -29,6 +29,7 @@ func (reminder Reminder) insertIntoDB(db *sql.DB, userID string) error {
 	_, err := db.Exec("INSERT INTO reminders (student_id, headers, body, tags, reminder_date_time)  VALUES ($1, $2, $3, $4, $5::TIMESTAMP)",
 		studentID, headersJSON, reminder.Body, tagsJSON, reminder.DateTime)
 	if err != nil {
+		panic(err)
 		return errors.New("oopsie, doopsie, doo")
 	}
 
@@ -60,11 +61,13 @@ func parseReminder(r *http.Request) (Reminder, error) {
 
 	// Determine if the request is valid
 	if !util.IsSet(body, subject, reminderDateTimeRAW, tagsTXT) {
-		return Reminder{}, errors.New("invalud request")
+		return Reminder{}, errors.New("invalid request")
 	}
 
 	// Parse the time into a suitable format
 	reminderDateTime, _ := util.ParseDateTime(reminderDateTimeRAW)
+
+
 	// Parse the json into an actual structure
 	var tags []string
 	err := json.Unmarshal([]byte(tagsTXT), &tags)
@@ -103,7 +106,12 @@ func parseReminder(r *http.Request) (Reminder, error) {
 // Create reminders handler
 func CreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
-	user, _ := sessions.ParseSessions(r, w)
+	allowed, user := sessions.IsUserAllowed(r, w, "user")
+	if !allowed {
+		quickerrors.NotLoggedIn(w)
+		return
+	}
+
 
 	// Login into database
 	db.Conn("admin")
@@ -112,6 +120,7 @@ func CreationHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	requestedReminder, err := parseReminder(r)
 	if err != nil {
 		quickerrors.MalformedRequest(w, "Missing or invalid parameters, check the API Documentation")
+		return
 	}
 
 	err = requestedReminder.insertIntoDB(db.DB, user.Name)
