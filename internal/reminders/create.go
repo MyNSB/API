@@ -79,7 +79,7 @@ func parseReminder(r *http.Request) (Reminder, error) {
 	headers := map[string]interface{} {
 		"Content-Length": len(body),
 		"Tags-Length": len(tags),
-		"Created-At": time.Now().String(),
+		"Created-At": time.Now().In(util.TIMEZONE).String(),
 		"Subject": subject,
 	}
 

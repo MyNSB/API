@@ -14,7 +14,7 @@ func init() {
 
 	// Attain the location of the bellTimes data
 	gopath := util.GetGOPATH()
-	bellTimesDir := filepath.FromSlash(gopath + "/mynsb-api/internal/belltimes/bellTimes.json")
+	bellTimesDir := filepath.FromSlash(gopath + "/src/mynsb-api/internal/belltimes/bellTimes.json")
 
 	// Read the file and unmarshal it into the data structure
 	data, _ := ioutil.ReadFile(bellTimesDir)

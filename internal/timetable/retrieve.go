@@ -37,7 +37,7 @@ func init() {
 
 	// Get gopath and build a timetable directory
 	gopath := util.GetGOPATH()
-	timetableDir := filepath.FromSlash(gopath + "/mynsb-api/internal/timetable/daemons/Timetables.json")
+	timetableDir := filepath.FromSlash(gopath + "/src/mynsb-api/internal/timetable/daemons/Timetables.json")
 
 	// Read the file and dump it into our data structure
 	var jsonDataBuffer []byte
@@ -157,17 +157,15 @@ func getWholeDay(requestedDay int, studentID string) ([]Class, error) {
 
 // UTILITY FUNCTIONS
 
-// getMaxKey returns the largest key in a map of integers
-func getMaxKey(list map[int]Class) int {
-	max := -9999999
+// getNumKeys returns the largest key in a map of integers
+func getNumKeys(list map[int]Class) int {
+	num := 0
 
-	for key := range list {
-		if key > max {
-			max = key
-		}
+	for _ = range list {
+		num += 1
 	}
 
-	return max
+	return num
 }
 
 
@@ -190,10 +188,14 @@ func sortTimetable(timetable []Class) []Class {
 	}
 
 	// Match the actual timetable with the mask
-	periodNo := getMaxKey(timetableMask)
+	periodNo := getNumKeys(timetableMask)
 	finMask := make([]Class, periodNo)
 	for x := range timetableMask {
-		finMask[x-1] = timetableMask[x]
+		if _, ok := timetableMask[0]; ok {
+			finMask[x] = timetableMask[x]
+		} else {
+			finMask[x-1] = timetableMask[x]
+		}
 	}
 	finalTimetable := finMask[:]
 	finalTimetable = append(finalTimetable, initialClass)

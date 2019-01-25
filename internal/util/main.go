@@ -13,7 +13,13 @@ import (
 	"github.com/metakeule/fmtdate"
 )
 
-const APIURL = "http://127.0.0.1"
+const APIURL = "https://mynsb.nsbvisions.com"
+var TIMEZONE *time.Location
+
+
+func init() {
+	TIMEZONE, _ = time.LoadLocation("Australia/Sydney")
+}
 
 
 

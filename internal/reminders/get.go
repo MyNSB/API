@@ -100,8 +100,8 @@ func RetrievalHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 
 	// Get all reminders for today
 	if ps.ByName("reqType") == "/Today" {
-		yesterday := time.Now().Add(time.Hour*-24)
-		tommorrow := time.Now().Add(time.Hour*24)
+		yesterday := time.Now().In(util.TIMEZONE).Add(time.Hour*-24)
+		tommorrow := time.Now().In(util.TIMEZONE).Add(time.Hour*24)
 
 		reminders, _ := json.Marshal(getReminders(db.DB, yesterday, tommorrow, currUser.Name))
 		util.HTTPResponse(200, "OK", string(reminders), "Response", w)

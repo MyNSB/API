@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"mynsb-api/internal/filesint"
 	"time"
+	"mynsb-api/internal/util"
 )
 
 // NOTE ========== THE jwt PACKAGE ONLY TAKES THE JWTData struct
@@ -32,7 +33,7 @@ func GenJWT(user JWTData) (string, error) {
 	claims["User"] = user.User
 	claims["Password"] = user.Password
 	claims["Permissions"] = user.Permissions
-	claims["Expires"] = time.Now().Add(oneMonth)
+	claims["Expires"] = time.Now().In(util.TIMEZONE).Add(oneMonth)
 
 	// Get the private key
 	privateKey, err := filesint.DataDump("sensitive", "/keys/priv.txt")

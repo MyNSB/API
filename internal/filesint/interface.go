@@ -20,9 +20,9 @@ func GetDirs() map[string]string {
 
 	gopath := util.GetGOPATH()
 	return map[string]string{
-		"assets": gopath + "/mynsb-api/assets",
-		"sensitive": gopath + "/mynsb-api/sensitive",
-		"database": gopath + "/mynsb-api/database",
+		"assets": gopath + "/src/mynsb-api/assets",
+		"sensitive": gopath + "/src/mynsb-api/sensitive",
+		"database": gopath + "/src/mynsb-api/database",
 	}
 }
 

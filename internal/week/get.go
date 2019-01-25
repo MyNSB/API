@@ -30,7 +30,7 @@ func getCurrTermInfo() (string, time.Time) {
 		termStartRaw, _	:= parseSchoolDate(name.Get("start_date").String())
 		termEnd, _ 		:= parseSchoolDate(name.Get("end_date").String())
 
-		if time.Now().Before(termEnd) && time.Now().After(termStart) {
+		if time.Now().In(util.TIMEZONE).Before(termEnd) && time.Now().In(util.TIMEZONE).After(termStart) {
 			week = name.Get("week_ab").String()
 			termStart = termStartRaw
 			break
@@ -113,7 +113,7 @@ func GetHandler(w http.ResponseWriter, _ *http.Request, _ httprouter.Params) {
 
 	// Determine what week the term started on
 	startWeekType, termStartDate := getCurrTermInfo()
-	today := time.Now()
+	today := time.Now().In(util.TIMEZONE)
 
 	// Calculate difference between two dates in terms of weeks
 	diff := today.Sub(termStartDate)

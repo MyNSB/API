@@ -121,7 +121,7 @@ func getIncomingIssue(r *http.Request) (Issue, error) {
 		Name:          issueName,
 		Desc:          issueDesc,
 		Link:          issuuLink,
-		PublishDate:   time.Now(),
+		PublishDate:   time.Now().In(util.TIMEZONE),
 		TypePost:      "Issue",
 	}, nil
 }

@@ -136,11 +136,19 @@ func jwtDataToUser(details jwt.JWTData) user.User {
 func isUserInDB(db *sql.DB, userData jwt.JWTData) bool {
 
 	// Get the number of results
-	numUsers, err := util.NumResults(db, "SELECT * FROM students WHERE student_id = ?", userData.User)
+	numUsers, userErr := util.NumResults(db, "SELECT * FROM students WHERE student_id = $1", userData.User)
 
-	if numUsers == 0 || err != nil {
-		return false
+	// if there is an error that means the user is an admin
+	if userErr != nil {
+		// these if they are an admin
+		numAdmins, _ := util.NumResults(db, "SELECT * FROM admins WHERE admin_name = $1", userData.User)
+
+		if numAdmins != 0 {
+			return true
+		}
+	} else if numUsers != 0 {
+		return true
 	}
 
-	return true
+	return false
 }
