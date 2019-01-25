@@ -41,6 +41,5 @@ func (issue *Issue) ReplaceWith(rows *sql.Rows) {
 		&issue.Desc,
 		&issue.PublishDate,
 		&issue.ImageUrl,
-		&issue.Link,
-		&issue.TypePost)
+		&issue.Link)
 }

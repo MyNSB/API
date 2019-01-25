@@ -23,7 +23,7 @@ import (
 // issue.insertIntoDB takes an issue of the 4U Paper, checks whether if it already exists within the database and inserts it into the DB if it doesn't
 func (issue Issue) insertIntoDB(db *sql.DB) error {
 	// Determine if the issue has already been entered into the DB
-	numInstances, _ := util.NumResults(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2 and type = $3", issue.Name, issue.Link, issue.TypePost);
+	numInstances, _ := util.NumResults(db, "SELECT * FROM four_u WHERE article_name = $1 and link = $2", issue.Name, issue.Link);
 	if numInstances != 0 {
 		return errors.New("issue already exists")
 	}
@@ -40,7 +40,7 @@ func (issue Issue) insertIntoDB(db *sql.DB) error {
 
 	// Push everything into the DB
 	db.Exec("INSERT INTO four_u (article_name, article_desc, article_publish_date, article_image_url, link, type) VALUES($1, $2, $3::DATE, $4, $5, $6)",
-		issue.Name, issue.Desc, issue.PublishDate, issue.ImageUrl, issue.Link, issue.TypePost)
+		issue.Name, issue.Desc, issue.PublishDate, issue.ImageUrl, issue.Link)
 
 	return nil
 }
