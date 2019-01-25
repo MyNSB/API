@@ -9,6 +9,12 @@
 			"revisionTime": "2018-08-10T17:55:52Z"
 		},
 		{
+			"checksumSHA1": "vE2HQvxMVE90Ha9GnMVNYBOmzIQ=",
+			"path": "github.com/NaySoftware/go-fcm",
+			"revision": "28fff9381d17f35619309c7a5ada41d26030d976",
+			"revisionTime": "2018-02-07T12:43:14Z"
+		},
+		{
 			"checksumSHA1": "Ghzc0i+VIjwMMAVv84m3EmksXIo=",
 			"path": "github.com/SermoDigital/jose",
 			"revision": "803625baeddc3526d01d321b5066029f53eafc81",
